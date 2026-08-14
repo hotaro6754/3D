@@ -1,0 +1,136 @@
+{
+  "hero": {
+    "name_first": "HARSHITH",
+    "name_last": "GANGARAJU",
+    "title": "THE GHOST OF SECURITY",
+    "bio_intro": "I build fully autonomous, agentic security infrastructure.",
+    "bio_details": "My flagship creation, AEGIS, is a self-learning AI OS deployed on a Kali VPS that autonomously hunts CVEs and acts as a tireless enterprise defender.",
+    "badges": ["AI ENGINEER", "CTO"],
+    "stats": {
+      "level": "999+",
+      "class": "GHOST",
+      "guild": "QYVERIX"
+    }
+  },
+  "projects": [
+    {
+      "id": "aegis",
+      "name": "AEGIS OS",
+      "desc": "Fully autonomous agentic cybersecurity OS. Self-learning AI agent with Hermes + OpenClaw, deploys on Kali Linux VPS. Solves daily CVEs and THM labs.",
+      "link": "https://github.com/hotaro6754/AEGIS",
+      "tags": ["PYTHON", "HERMES", "KALI LINUX"],
+      "sfx": "ゴゴゴゴ",
+      "css_classes": "panel-wide panel-slanted-1"
+    },
+    {
+      "id": "zeroslop",
+      "name": "ZEROSLOP",
+      "desc": "AI development methodology framework. An 8-stage pipeline with self-scoring quality gates.",
+      "link": "https://github.com/hotaro6754/ZeroSlop",
+      "tags": ["4 STARS ⭐"],
+      "sfx": "ドン!",
+      "css_classes": "panel-slanted-2 panel-inverse"
+    },
+    {
+      "id": "offsec-mentor",
+      "name": "OFFSEC MENTOR",
+      "desc": "Production-ready AI-powered certification readiness system using Groq LLaMA 3.3.",
+      "link": "https://offsec-ai-mentor.onrender.com/",
+      "tags": [],
+      "sfx": "バッ",
+      "css_classes": ""
+    },
+    {
+      "id": "biobloomberg",
+      "name": "BIOBLOOMBERG",
+      "desc": "A completely free, open-source AI intelligence platform aggregating 50+ public biological databases into a living Neo4j knowledge graph.",
+      "link": "https://github.com/hotaro6754/BioBloomberg",
+      "tags": ["FASTAPI", "NEO4J", "RAG"],
+      "sfx": "スッ",
+      "css_classes": "panel-wide panel-slanted-1"
+    },
+    {
+      "id": "home",
+      "name": "BASE OF OPERATIONS",
+      "desc": "Primary safehouse. System logs and core settings accessed from here.",
+      "link": "",
+      "tags": ["HQ"],
+      "sfx": "ガチャ",
+      "css_classes": ""
+    }
+  ],
+  "quests": [
+    {
+      "role": "CHIEF TECHNOLOGY OFFICER",
+      "company": "QYVERIX",
+      "duration": "MAY 2026 - PRESENT",
+      "desc": "Leading technology strategy, infrastructure, and platform architectures."
+    },
+    {
+      "role": "AI ENGINEER",
+      "company": "ZODECK TECHNOLOGIES",
+      "duration": "APR 2026 - PRESENT",
+      "desc": "Developing AI automations, agentic workflows, and deploying ML solutions."
+    }
+  ],
+  "achievements": [
+    {
+      "name": "CLAUDE 101",
+      "issuer": "ANTHROPIC",
+      "link": "https://verify.skilljar.com/c/5xzoirzryucq"
+    },
+    {
+      "name": "PRE SECURITY",
+      "issuer": "TRYHACKME",
+      "link": "https://tryhackme.com/certificate/THM-JYZCOUJORY"
+    },
+    {
+      "name": "CS50",
+      "issuer": "HARVARD",
+      "link": "https://certificates.cs50.io/c7ea1f27-5abe-420e-b0c8-83229f977343.pdf"
+    }
+  ],
+  "trophies": [
+    {
+      "name": "NSRIT HACKFEST 2026",
+      "award": "3RD PRIZE",
+      "highlight": true
+    },
+    {
+      "name": "HACKVERSE GDGOC",
+      "award": "PARTICIPANT",
+      "highlight": false
+    }
+  ],
+  "socials": {
+    "email": "harshith6754@gmail.com",
+    "github": "https://github.com/hotaro6754",
+    "linkedin": "https://www.linkedin.com/in/harshith-gangaraju-09a69638b/"
+  },
+  "skills": [
+    {
+      "category": "PROGRAMMING",
+      "items": ["Python", "TypeScript", "JavaScript", "C", "C++"]
+    },
+    {
+      "category": "WEB / FULL STACK",
+      "items": ["React", "Three.js", "Node.js", "FastAPI"]
+    },
+    {
+      "category": "AI / ML",
+      "items": ["Agentic AI", "LLMs", "RAG", "Model Fine-tuning"]
+    },
+    {
+      "category": "CYBERSECURITY",
+      "items": ["Red Teaming", "Penetration Testing", "Offensive Security", "AI Security"]
+    },
+    {
+      "category": "SYSTEMS & TOOLS",
+      "items": ["Linux", "Git", "Docker", "Neo4j"]
+    }
+  ],
+  "security": {
+    "profile": "I specialize in Red Teaming and Offensive Security, integrating autonomous AI agents into penetration testing workflows. My focus is on discovering vulnerabilities through automated exploitation pipelines.",
+    "roadmap": ["eJPT", "OSCP", "CRTO"]
+  }
+}

@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@400;700;900&display=swap');
+
+:root {
+  /* ── Core palette (from hotaro6754-main) ── */
+  --bg: #050505;
+  --fg: #f4f4f4;
+  --accent: #c1121f;
+
+  --text-main: #f4f4f4;
+  --text-inverse: #050505;
+  --text-muted: #aaaaaa;
+
+  /* ── Extended palette (cybersecurity / tech district) ── */
+  --neon-cyan: #00f0ff;
+  --neon-cyan-dim: #007a82;
+  --deep-purple: #1a0a2e;
+  --midnight: #0a0e1a;
+  --ink: #0f0f14;
+  --steel: #2a2a35;
+  --warm-highlight: #ffe4c4;
+
+  /* ── Typography ── */
+  --font-impact: 'Anton', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-jp: 'Noto Sans JP', sans-serif;
+
+  /* ── Layout ── */
+  --border-w: 5px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+
+  /* ── Filters ── */
+  --img-filter: grayscale(100%) contrast(1.4) invert(0);
+}
+
+body.paper-mode {
+  --bg: #f4f4f4;
+  --fg: #050505;
+  --accent: #c1121f;
+
+  --text-main: #050505;
+  --text-inverse: #f4f4f4;
+  --text-muted: #555555;
+
+  --ink: #e8e8e8;
+  --steel: #d0d0d8;
+  --midnight: #f0f0f5;
+
+  --img-filter: grayscale(100%) contrast(1.4) invert(1);
+}
+
