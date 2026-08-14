@@ -1,6 +1,6 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ClassicPortfolio from './features/classic/ClassicPortfolio';
 import World from './components/world/World';
 import Home from './pages/Home';
@@ -43,6 +43,12 @@ import { MusicProvider } from './components/audio/MusicProvider';
 
 export default function App() {
   const isBirthday = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('event') === 'sahithi';
+
+  useEffect(() => {
+    if (isBirthday) {
+      document.title = "🌸 Happy Birthday Sahithi 🌸";
+    }
+  }, [isBirthday]);
 
   const [mode, setMode] = useState<ViewMode>(() => {
     if (typeof window !== 'undefined') {

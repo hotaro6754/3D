@@ -125,7 +125,7 @@ export const BirthdayVideoUI: React.FC<BirthdayVideoUIProps> = ({ ctx, visible, 
                 boxShadow: '0 0 10px #f472b6'
               }} />
               <span style={{ fontSize: '15px', fontWeight: 700, letterSpacing: '0.2em', color: '#fbcfe8' }}>
-                DISTRICT WATCH // CELEBRATION DIRECTIVE 🌸
+                SAHITHI CELEBRATION // BIRTHDAY DIRECTIVE 🌸
               </span>
             </div>
             <span style={{ fontSize: '12px', color: '#f472b6', letterSpacing: '0.1em', fontWeight: 600 }}>

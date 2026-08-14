@@ -82,42 +82,46 @@ function vertical(c: CanvasRenderingContext2D, text: string, x: number, y0: numb
   [...text].forEach((ch, i) => c.fillText(ch, x, y0 + i * step));
 }
 
+import { BirthdayThemeConfig } from '../world/BirthdayThemeConfig';
+
 /* ---------------------------------- shop ---------------------------------- */
 
 /** The big shop fascia: 青空商店 (fictional "Blue Sky Store"). */
 export const shopSign = () =>
-  cached('shopSign', () =>
+  cached('shopSign_' + (BirthdayThemeConfig.enabled ? 'bday' : 'std'), () =>
     make(1024, 256, (c, w, h) => {
-      c.fillStyle = '#fbfaf6';
+      const isBirthday = BirthdayThemeConfig.enabled;
+      c.fillStyle = isBirthday ? '#0f172a' : '#fbfaf6';
       c.fillRect(0, 0, w, h);
-      c.fillStyle = hex(PAL.blue);
+      c.fillStyle = isBirthday ? '#f472b6' : hex(PAL.blue);
       c.fillRect(0, h - 16, w, 16);
       c.fillRect(0, 0, w, 10);
-      centered(c, 'HARSHITH', w * 0.42, h * 0.5, w * 0.6, 120, '#20509e', 'bold', 14);
+      centered(c, isBirthday ? 'SAHITHI' : 'HARSHITH', w * 0.42, h * 0.5, w * 0.6, 120, isBirthday ? '#fbcfe8' : '#20509e', 'bold', 14);
       c.font = `600 40px ${JP_FONT}`;
-      c.fillStyle = '#7f8798';
+      c.fillStyle = isBirthday ? '#f472b6' : '#7f8798';
       c.textAlign = 'left';
       c.textBaseline = 'middle';
-      c.fillText('DISTRICT', w * 0.7, h * 0.42);
+      c.fillText(isBirthday ? 'CELEBRATION' : 'DISTRICT', w * 0.7, h * 0.42);
       c.font = `500 30px ${JP_FONT}`;
-      c.fillStyle = '#a8adba';
-      c.fillText('TECH ・ LABS', w * 0.7, h * 0.68);
+      c.fillStyle = isBirthday ? '#fed7aa' : '#a8adba';
+      c.fillText(isBirthday ? 'HAPPY BIRTHDAY 🌸' : 'TECH ・ LABS', w * 0.7, h * 0.68);
     })
   );
 
 /** Vertical banner beside the shop door. */
 export const shopBanner = () =>
-  cached('shopBanner', () =>
+  cached('shopBanner_' + (BirthdayThemeConfig.enabled ? 'bday' : 'std'), () =>
     make(192, 768, (c, w, h) => {
-      c.fillStyle = hex(PAL.red);
+      const isBirthday = BirthdayThemeConfig.enabled;
+      c.fillStyle = isBirthday ? '#db2777' : hex(PAL.red);
       c.fillRect(0, 0, w, h);
-      c.fillStyle = '#fdf6ec';
+      c.fillStyle = isBirthday ? '#1e293b' : '#fdf6ec';
       c.fillRect(10, 10, w - 20, h - 20);
-      c.fillStyle = hex(PAL.red);
+      c.fillStyle = isBirthday ? '#db2777' : hex(PAL.red);
       c.fillRect(10, 10, w - 20, 90);
-      centered(c, 'TECH', w / 2, 55, w - 40, 70, '#fdf6ec');
-      vertical(c, 'DISTRICT', w / 2, 180, 96, 76, '#1e4f96');
-      vertical(c, 'SECURE', w / 2, 560, 96, 62, '#3c3a46');
+      centered(c, isBirthday ? 'SAHITHI' : 'TECH', w / 2, 55, w - 40, isBirthday ? 50 : 70, isBirthday ? '#fbcfe8' : '#fdf6ec');
+      vertical(c, isBirthday ? 'CELEBRATE' : 'DISTRICT', w / 2, 180, 96, 76, isBirthday ? '#f472b6' : '#1e4f96');
+      vertical(c, isBirthday ? 'BIRTHDAY' : 'SECURE', w / 2, 560, 96, 62, isBirthday ? '#fbcfe8' : '#3c3a46');
     })
   );
 
@@ -3592,7 +3596,6 @@ export const railPlate = (variant = 0) =>
     })
   );
 
-import { BirthdayThemeConfig } from '../world/BirthdayThemeConfig';
 
 /**
  * The 遊歩道 fingerpost plates.  One per plate, because a fingerpost carries a

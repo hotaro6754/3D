@@ -91,7 +91,7 @@ export const WorldGuideUI: React.FC<Props> = ({ ctx, visible, onComplete }) => {
               boxShadow: '0 0 8px #f472b6'
             }} />
             <span style={{ fontWeight: 700, fontSize: '18px', letterSpacing: '0.15em', color: '#e0f2fe' }}>
-              {isBirthday ? 'HARSHITH DISTRICT // IoT GUIDE' : 'DISTRICT TRANSIT & NAVIGATION'}
+              {isBirthday ? 'SAHITHI BIRTHDAY DISTRICT // NIGHT GUIDE' : 'DISTRICT TRANSIT & NAVIGATION'}
             </span>
           </div>
           <span style={{ fontSize: '12px', color: '#94a3b8', letterSpacing: '0.1em', fontFamily: 'monospace' }}>

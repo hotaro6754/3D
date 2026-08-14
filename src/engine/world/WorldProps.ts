@@ -589,7 +589,7 @@ export function buildProps(ctx: PortfolioContext) {
     position: new THREE.Vector3(0, 1.0, -3),
     radius: 2.0,
     facingDot: -1.0,
-    label: BirthdayThemeConfig.enabled ? "[E] OPEN DISTRICT GUIDE" : "[E] OPEN COMMUNICATIONS",
+    label: BirthdayThemeConfig.enabled ? "[E] OPEN SAHITHI BIRTHDAY GUIDE 🌸" : "[E] OPEN COMMUNICATIONS",
     onInteract: () => {
       if (BirthdayThemeConfig.enabled) {
         ctx.events.emit('OPEN_DISTRICT_GUIDE');

@@ -36,7 +36,7 @@ export const IntroOverlay: React.FC<IntroOverlayProps> = ({ onEnter }) => {
         animate={{ x: 0, opacity: 1, skewX: -15 }}
         transition={{ type: 'spring', damping: 15, stiffness: 100, delay: 0.1 }}
         style={{ 
-          fontSize: isBirthday ? '4.2rem' : '6rem', 
+          fontSize: isBirthday ? '3.4rem' : '6rem', 
           margin: 0, 
           lineHeight: 0.95,
           letterSpacing: '0.08em', 
@@ -48,25 +48,23 @@ export const IntroOverlay: React.FC<IntroOverlayProps> = ({ onEnter }) => {
       >
         {isBirthday ? 'HAPPY BIRTHDAY' : 'HARSHITH'}
       </motion.h1>
-      {!isBirthday && (
-        <motion.h1 
-          initial={{ x: 100, opacity: 0, skewX: -15 }}
-          animate={{ x: 0, opacity: 1, skewX: -15 }}
-          transition={{ type: 'spring', damping: 15, stiffness: 100, delay: 0.2 }}
-          style={{ 
-            fontSize: '6rem', 
-            margin: 0, 
-            lineHeight: 0.9,
-            letterSpacing: '0.05em', 
-            color: '#ff003c',
-            textShadow: `4px 4px 0 #000000, 8px 8px 0 rgba(255,0,60,0.3)`,
-            fontWeight: 900,
-            textAlign: 'center'
-          }}
-        >
-          GANGARAJU
-        </motion.h1>
-      )}
+      <motion.h1 
+        initial={{ x: 100, opacity: 0, skewX: -15 }}
+        animate={{ x: 0, opacity: 1, skewX: -15 }}
+        transition={{ type: 'spring', damping: 15, stiffness: 100, delay: 0.2 }}
+        style={{ 
+          fontSize: isBirthday ? '4.0rem' : '6rem', 
+          margin: 0, 
+          lineHeight: 0.9,
+          letterSpacing: '0.05em', 
+          color: isBirthday ? '#f472b6' : '#ff003c',
+          textShadow: `4px 4px 0 #000000, 8px 8px 0 rgba(${isBirthday ? '244,114,182' : '255,0,60'},0.3)`,
+          fontWeight: 900,
+          textAlign: 'center'
+        }}
+      >
+        {isBirthday ? 'SAHITHI 🌸' : 'GANGARAJU'}
+      </motion.h1>
       <motion.p 
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -82,7 +80,7 @@ export const IntroOverlay: React.FC<IntroOverlayProps> = ({ onEnter }) => {
           clipPath: 'polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)'
         }}
       >
-        {isBirthday ? '// A SMALL NIGHT WALK' : 'AI \u00d7 SECURITY \u00d7 SOFTWARE'}
+        {isBirthday ? '✨ A SPECIAL NIGHT WALK JUST FOR YOU ✨' : 'AI × SECURITY × SOFTWARE'}
       </motion.p>
       
       {/* Minimalist District Map */}
@@ -91,26 +89,31 @@ export const IntroOverlay: React.FC<IntroOverlayProps> = ({ onEnter }) => {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6 }}
         style={{
-          marginTop: '3rem',
-          padding: '1.5rem',
-          border: '1px solid #333',
-          background: 'rgba(0,0,0,0.5)',
+          marginTop: '2.5rem',
+          padding: '1.2rem 1.8rem',
+          border: `1px solid ${isBirthday ? 'rgba(244, 114, 182, 0.4)' : '#333'}`,
+          background: isBirthday ? 'rgba(15, 23, 42, 0.7)' : 'rgba(0,0,0,0.5)',
+          borderRadius: '12px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           gap: '8px',
           fontFamily: 'monospace',
-          color: '#aaa',
+          color: isBirthday ? '#fbcfe8' : '#aaa',
           fontSize: '0.9rem'
         }}
       >
-        <div style={{ color: '#fff', marginBottom: '8px', letterSpacing: '2px' }}>DISTRICT TOPOLOGY</div>
-        <div>[ STATION ] ------ [ LIBRARY ]</div>
+        <div style={{ color: '#fff', marginBottom: '8px', letterSpacing: '2px', fontWeight: 'bold' }}>
+          {isBirthday ? '🌸 SAHITHI NIGHT DISTRICT 🌸' : 'DISTRICT TOPOLOGY'}
+        </div>
+        <div>{isBirthday ? '[ SAKURA PLAZA ] ------ [ CAT SANCTUARY ]' : '[ STATION ] ------ [ LIBRARY ]'}</div>
         <div>   |                   |</div>
-        <div>   |----[ BRIDGE ]-----|</div>
+        <div>{isBirthday ? '   |----[ WATERFALL ]---|' : '   |----[ BRIDGE ]-----|'}</div>
         <div>   |                   |</div>
-        <div>[ SECURITY ]       [ HOME ]</div>
-        <div style={{ alignSelf: 'flex-start', marginTop: '10px' }}>&gt; STATUS: ONLINE</div>
+        <div>{isBirthday ? '[ AURA LAB ]       [ ROOFTOP THEATRE ]' : '[ SECURITY ]       [ HOME ]'}</div>
+        <div style={{ alignSelf: 'flex-start', marginTop: '10px', color: isBirthday ? '#f472b6' : '#aaa' }}>
+          &gt; STATUS: {isBirthday ? 'READY TO CELEBRATE 🎂' : 'ONLINE'}
+        </div>
       </motion.div>
 
       <motion.button
