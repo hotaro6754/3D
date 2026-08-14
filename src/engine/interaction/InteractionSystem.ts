@@ -40,8 +40,26 @@ export class InteractionSystem {
   /** The currently focused interactable, or null. */
   focused: Interactable | null = null;
 
-  /** Set by the UI layer; receives focus changes. */
-  onFocusChange: ((item: Interactable | null) => void) | null = null;
+  /** Set of UI listeners receiving focus changes. */
+  private listeners = new Set<(item: Interactable | null) => void>();
+
+  /** Legacy single-listener fallback + multi-listener subscription */
+  get onFocusChange(): ((item: Interactable | null) => void) | null {
+    return null;
+  }
+  set onFocusChange(fn: ((item: Interactable | null) => void) | null) {
+    if (fn) {
+      this.listeners.add(fn);
+    }
+  }
+
+  subscribe(listener: (item: Interactable | null) => void): () => void {
+    this.listeners.add(listener);
+    listener(this.focused);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
 
   private camera: THREE.PerspectiveCamera;
   private ctx: any;
@@ -129,6 +147,12 @@ export class InteractionSystem {
     if (this.focused?.highlight) this.focused.highlight.scale.setScalar(1);
     this.focused = item;
     this.pulse = 0;
-    this.onFocusChange?.(item);
+    this.listeners.forEach((listener) => {
+      try {
+        listener(item);
+      } catch (err) {
+        console.error('Interaction listener error:', err);
+      }
+    });
   }
 }

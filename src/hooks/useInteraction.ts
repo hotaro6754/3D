@@ -10,21 +10,14 @@ export function useInteraction(system: InteractionSystem | null) {
       return;
     }
 
-    // Initialize with whatever is currently focused
     setFocusedItem(system.focused);
 
-    // Setup listener
-    const handleFocusChange = (item: Interactable | null) => {
+    const unsubscribe = system.subscribe((item) => {
       setFocusedItem(item);
-    };
-
-    system.onFocusChange = handleFocusChange;
+    });
 
     return () => {
-      // Clean up if it hasn't been overwritten
-      if (system.onFocusChange === handleFocusChange) {
-        system.onFocusChange = null;
-      }
+      unsubscribe();
     };
   }, [system]);
 

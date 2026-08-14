@@ -537,8 +537,12 @@ export default function World() {
                 AnimationSystem.playScreenDoorTransition(() => {
                   setActiveProject(null); 
                   if (ctxObj) {
+                    (ctxObj.player as any).mode = 'PLAYER';
+                    (ctxObj.player as any).state.grounded = true;
+                    (ctxObj.player as any).state.velocity.set(0, 0, 0);
                     ctxObj.engine.input.suspended = false;
                     ctxObj.events.emit('CINEMATIC', false);
+                    ctxObj.events.emit('DIALOGUE_ACTIVE', false);
                     ctxObj.engine.input.requestLock();
                   }
                   window.dispatchEvent(new Event('tour_advance'));
@@ -797,7 +801,12 @@ export default function World() {
         onClose={() => {
           setShowRooftopExp(false);
           if (ctxObj) {
+            (ctxObj.player as any).mode = 'PLAYER';
+            (ctxObj.player as any).state.grounded = true;
+            (ctxObj.player as any).state.velocity.set(0, 0, 0);
             ctxObj.engine.input.suspended = false;
+            ctxObj.events.emit('CINEMATIC', false);
+            ctxObj.events.emit('DIALOGUE_ACTIVE', false);
             ctxObj.engine.input.requestLock();
           }
         }} 
