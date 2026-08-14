@@ -601,18 +601,20 @@ export function makeShrine(o = {}) {
 
 /* ----------------------------------- cat ----------------------------------- */
 
-export function makeCat(o = {}) {
+export function makeCat(o: { x?: number; y?: number; z?: number; ry?: number; color?: number; darkColor?: number; [key: string]: any } = {}) {
   const g = new THREE.Group();
   g.userData.planetRigid = true;   // idle animation drives its head and tail
-  const fur = cel({ color: PAL.cat, bands: 3, tint: 0x7a6f96 });
-  const furDark = cel({ color: PAL.catDark, bands: 3, tint: 0x6a5f86 });
+  const baseColor = o.color ?? PAL.cat;
+  const darkColor = o.darkColor ?? (o.color !== undefined ? 0x2b2024 : PAL.catDark);
+  const fur = cel({ color: baseColor, bands: 3, tint: 0x7a6f96 });
+  const furDark = cel({ color: darkColor, bands: 3, tint: 0x6a5f86 });
 
   const body = new THREE.Mesh(new THREE.SphereGeometry(0.19, 12, 9), fur);
   body.scale.set(1.0, 0.92, 1.35);
   body.position.set(0, 0.19, 0);
   body.castShadow = true;
   g.add(body);
-  // dark saddle patch
+  // saddle patch
   const patch = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), furDark);
   patch.scale.set(0.92, 0.6, 1.15);
   patch.position.set(0, 0.27, -0.03);
@@ -625,17 +627,17 @@ export function makeCat(o = {}) {
   skull.castShadow = true;
   head.add(skull);
   for (const s of [-1, 1]) {
-    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.09, 4), fur);
+    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.09, 4), furDark);
     ear.position.set(s * 0.062, 0.11, -0.01);
     ear.rotation.z = s * 0.2;
     head.add(ear);
   }
   for (const s of [-1, 1]) {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 6), furDark);
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 6), flat({ color: 0x1e293b }));
     eye.position.set(s * 0.045, 0.015, 0.098);
     head.add(eye);
   }
-  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.014, 6, 5), cel({ color: 0xe0a0a8, bands: 2 }));
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.014, 6, 5), cel({ color: 0xf472b6, bands: 2 }));
   nose.position.set(0, -0.022, 0.11);
   head.add(nose);
   g.add(head);

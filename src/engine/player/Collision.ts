@@ -44,8 +44,8 @@ export interface CircleCollider extends ColliderBase {
 export type Collider = BoxCollider | CircleCollider;
 
 export interface GroundSampler {
-  /** World-space ground height at (x, z). */
-  (x: number, z: number): number;
+  /** World-space ground height at (x, z), optionally relative to current playerY. */
+  (x: number, z: number, playerY?: number): number;
 }
 
 export interface FloorCollider {

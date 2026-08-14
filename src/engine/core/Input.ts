@@ -44,9 +44,56 @@ export class Input {
   sensitivity = 0.0022;
   invertY = false;
 
+  /** Mobile / Touch virtual joystick and drag-look controls */
+  touchMoveX = 0; // -1 to 1 (left/right strafe)
+  touchMoveZ = 0; // -1 to 1 (forward/backward)
+  touchDX = 0;    // look delta X in radians
+  touchDY = 0;    // look delta Y in radians
+  touchSensitivity = 0.0032;
+
   locked = false;
   /** Suppresses look/move input while a modal (dialogue, menu) owns the screen. */
   suspended = false;
+
+  /**
+   * Set virtual analog joystick vector (-1 to 1).
+   */
+  setVirtualStick(x: number, z: number): void {
+    if (this.suspended) {
+      this.touchMoveX = 0;
+      this.touchMoveZ = 0;
+      return;
+    }
+    this.touchMoveX = Math.max(-1, Math.min(1, x));
+    this.touchMoveZ = Math.max(-1, Math.min(1, z));
+  }
+
+  /**
+   * Add touch drag delta for camera rotation.
+   */
+  addTouchLook(rawDx: number, rawDy: number): void {
+    if (this.suspended) return;
+    const dx = clampDelta(rawDx);
+    const dy = clampDelta(rawDy);
+    this.touchDX += dx * this.touchSensitivity;
+    this.touchDY += dy * this.touchSensitivity * (this.invertY ? -1 : 1);
+  }
+
+  pressKey(code: string): void {
+    if (this.suspended) return;
+    this.held.add(code);
+    this.pressed.add(code);
+  }
+
+  releaseKey(code: string): void {
+    this.held.delete(code);
+    this.released.add(code);
+  }
+
+  triggerAction(code: string): void {
+    if (this.suspended) return;
+    this.pressed.add(code);
+  }
 
   /**
    * Consecutive refused lock requests, reset the moment a lock is granted. Two
@@ -203,6 +250,8 @@ export class Input {
     this.released.clear();
     this.mouseDX = 0;
     this.mouseDY = 0;
+    this.touchDX = 0;
+    this.touchDY = 0;
   }
 
   private onKeyDown = (e: KeyboardEvent): void => {

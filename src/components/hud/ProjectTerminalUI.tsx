@@ -122,6 +122,23 @@ export const ProjectTerminalUI: React.FC<Props> = ({ projectId, onClose }) => {
       );
     }
     
+    if (projectId === 'security:birthday') {
+      return (
+        <div style={{ maxWidth: '800px', width: '100%', padding: '2rem' }}>
+          <motion.h1 variants={slideInRight} style={{ fontSize: '3rem', color: '#ff3333', marginBottom: '2rem', borderBottom: `2px solid #ff3333` }}>
+            THREAT DETECTED
+          </motion.h1>
+          <motion.div variants={fadeIn} style={{ fontSize: '1.2rem', lineHeight: 2, marginBottom: '2rem', fontFamily: 'monospace' }}>
+            <p><span style={{ color: '#aaa' }}>CLASSIFICATION:</span> <span style={{ color: C_CYAN, fontWeight: 'bold' }}>BIRTHDAY</span></p>
+            <p><span style={{ color: '#aaa' }}>SEVERITY:</span> <span style={{ color: '#ff3333', fontWeight: 'bold' }}>EXTREMELY HIGH</span></p>
+            <br />
+            <p><span style={{ color: '#aaa' }}>RECOMMENDED RESPONSE:</span></p>
+            <p style={{ color: C_MAGENTA, fontWeight: 'bold', fontSize: '1.5rem', marginTop: '0.5rem' }}>SEND WISHES</p>
+          </motion.div>
+        </div>
+      );
+    }
+
     if (projectId === 'security:profile') {
       return (
         <div style={{ maxWidth: '800px', width: '100%', padding: '2rem' }}>

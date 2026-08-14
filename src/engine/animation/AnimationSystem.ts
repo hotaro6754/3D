@@ -1,16 +1,9 @@
 import { animate } from 'animejs';
 import * as THREE from 'three';
-import { PlayerController } from '../player/PlayerController';
+import { PlayerController, CameraMode } from '../player/PlayerController';
 
 export class AnimationSystem {
-  /**
-   * Cinematic drop-in landing animation.
-   */
   static playLandingBounce(player: PlayerController, intensity: number = 1.0) {
-    // We animate the player's external offsets rather than the camera directly
-    // so it doesn't conflict with the player's own update loop.
-    
-    // Animate an artificial downward kick on the external bob offset
     player.externalBobY = -(0.3 * intensity);
     animate(player, {
       externalBobY: 0,
@@ -18,63 +11,59 @@ export class AnimationSystem {
       easing: 'easeOutElastic(1, .6)'
     });
     
-    // Headbob pitch bounce
-    player.externalPitch = -(0.08 * intensity);
+    player.externalPitch = (0.1 * intensity);
     animate(player, {
       externalPitch: 0,
-      duration: 800,
-      easing: 'easeOutElastic(1, .6)'
+      duration: 1000,
+      easing: 'easeOutQuart'
     });
   }
 
-  /**
-   * Bench sit animation.
-   */
-  static playBenchSit(player: PlayerController, targetPos: THREE.Vector3, targetYaw: number, onComplete: () => void) {
-    (player as any).mode = 'SITTING';
-
+  static playBenchSit(player: PlayerController, benchPos: THREE.Vector3, benchRotY: number, onComplete: () => void, targetPitch: number = -0.05) {
+    player.mode = CameraMode.SITTING;
+    player.state.grounded = false;
+    player.state.velocity.set(0, 0, 0);
+    
     animate(player.state.position, {
-      x: targetPos.x,
-      y: targetPos.y,
-      z: targetPos.z,
-      duration: 1200,
+      x: benchPos.x,
+      y: benchPos.y,
+      z: benchPos.z,
+      duration: 1500,
       easing: 'easeInOutSine'
     });
 
     animate(player.state, {
-      yaw: targetYaw,
+      yaw: benchRotY,
+      pitch: targetPitch,
       duration: 1200,
-      easing: 'easeInOutSine',
+      easing: 'easeInOutQuad',
       complete: onComplete
     });
   }
 
-  /**
-   * Bench stand up animation.
-   */
   static playBenchStand(player: PlayerController, targetPos: THREE.Vector3, targetYaw: number, onComplete: () => void) {
     animate(player.state.position, {
       x: targetPos.x,
-      y: targetPos.y,
-      z: targetPos.z,
+      y: targetPos.y + 0.5,
+      z: targetPos.z + 1.0,
       duration: 1000,
       easing: 'easeInOutQuad'
     });
 
     animate(player.state, {
       yaw: targetYaw,
-      duration: 1000,
+      pitch: 0,
+      duration: 800,
       easing: 'easeInOutQuad',
       complete: () => {
-        (player as any).mode = 'PLAYER';
-        if (onComplete) onComplete();
+        player.mode = CameraMode.PLAYER;
+        player.state.velocity.set(0, 0, 0);
+        player.state.grounded = true;
+        onComplete();
       }
     });
   }
 
-  /**
-   * Screen door transition (sliding two halves).
-   */
   static playScreenDoorTransition(onMidpoint: () => void, onComplete?: () => void) {
     const leftDoor = document.createElement('div');
     const rightDoor = document.createElement('div');
@@ -86,7 +75,6 @@ export class AnimationSystem {
     document.body.appendChild(leftDoor);
     document.body.appendChild(rightDoor);
 
-    // Close doors
     animate(leftDoor, {
       left: 0,
       duration: 500,
@@ -99,7 +87,6 @@ export class AnimationSystem {
       easing: 'easeInOutQuad',
       complete: () => {
         onMidpoint();
-        // Open doors
         animate(leftDoor, {
           left: '-50vw',
           duration: 500,

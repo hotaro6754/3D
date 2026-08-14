@@ -72,7 +72,7 @@ export class Engine {
     this.renderer.toneMappingExposure = 1.0;
 
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.VSMShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     container.appendChild(this.renderer.domElement);
 

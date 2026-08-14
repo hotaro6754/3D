@@ -42,9 +42,11 @@ import TourHUD from './components/hud/TourHUD';
 import { MusicProvider } from './components/audio/MusicProvider';
 
 export default function App() {
+  const isBirthday = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('event') === 'sahithi';
+
   const [mode, setMode] = useState<ViewMode>(() => {
-    // Mobile touch devices immediately fallback to classic mode
     if (typeof window !== 'undefined') {
+      if (isBirthday) return 'immersive';
       const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
       if (isTouch) return 'classic';
     }
@@ -57,36 +59,38 @@ export default function App() {
       {mode === 'immersive' && (
         <>
           <World />
-          <TourHUD />
+          {!isBirthday && <TourHUD />}
         </>
       )}
 
       <div className="ui-layer" style={{ position: 'relative', zIndex: 1, pointerEvents: 'none' }}>
-        <button
-          className="mode-toggle"
-          onClick={() => setMode(m => m === 'immersive' ? 'classic' : 'immersive')}
-          aria-label={`Switch to ${mode === 'immersive' ? 'classic' : 'immersive'} mode`}
-          style={{
-            position: 'fixed',
-            bottom: '1.5rem',
-            right: '1.5rem',
-            zIndex: 999,
-            padding: '0.6rem 1.2rem',
-            background: 'var(--accent)',
-            color: 'var(--fg)',
-            border: 'none',
-            fontFamily: 'var(--font-body)',
-            fontWeight: 600,
-            fontSize: '0.85rem',
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            cursor: 'pointer',
-            pointerEvents: 'auto',
-            clipPath: 'polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%)',
-          }}
-        >
-          {mode === 'immersive' ? '2D MODE' : '3D MODE'}
-        </button>
+        {!isBirthday && (
+          <button
+            className="mode-toggle"
+            onClick={() => setMode(m => m === 'immersive' ? 'classic' : 'immersive')}
+            aria-label={`Switch to ${mode === 'immersive' ? 'classic' : 'immersive'} mode`}
+            style={{
+              position: 'fixed',
+              bottom: '1.5rem',
+              right: '1.5rem',
+              zIndex: 999,
+              padding: '0.6rem 1.2rem',
+              background: 'var(--accent)',
+              color: 'var(--fg)',
+              border: 'none',
+              fontFamily: 'var(--font-body)',
+              fontWeight: 600,
+              fontSize: '0.85rem',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              pointerEvents: 'auto',
+              clipPath: 'polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%)',
+            }}
+          >
+            {mode === 'immersive' ? '2D MODE' : '3D MODE'}
+          </button>
+        )}
 
         <div style={{ pointerEvents: 'auto' }}>
           <AnimatedRoutes mode={mode} />

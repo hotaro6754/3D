@@ -37,7 +37,9 @@ export function DebugOverlay({ ctx }: { ctx: PortfolioContext | null }) {
     return () => cancelAnimationFrame(rAF);
   }, [ctx]);
 
-  if (!ctx) return null;
+  const isDebug = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debug') === '1';
+
+  if (!ctx || !isDebug) return null;
 
   return (
     <div style={{

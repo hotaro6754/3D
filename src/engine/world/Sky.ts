@@ -3,18 +3,35 @@ import { PAL } from '../rendering/palette';
 import { flat } from '../rendering/toon';
 // Assume cloudTex exists or we can mock a simple canvas texture
 import { rngKit } from '../rendering/util';
+import { BirthdayThemeConfig } from '../../engine/world/BirthdayThemeConfig';
 
 function cloudTex(): THREE.Texture {
   const cv = document.createElement('canvas');
   cv.width = 512;
-  cv.height = 128;
+  cv.height = 256;
   const c = cv.getContext('2d')!;
-  c.fillStyle = '#ffffff';
-  c.beginPath();
-  c.ellipse(256, 64, 200, 50, 0, 0, Math.PI * 2);
-  c.ellipse(150, 80, 100, 30, 0, 0, Math.PI * 2);
-  c.ellipse(350, 70, 120, 40, 0, 0, Math.PI * 2);
-  c.fill();
+
+  const drawPuff = (cx: number, cy: number, rx: number, ry: number, alpha: number) => {
+    const grad = c.createRadialGradient(cx, cy, 0, cx, cy, Math.max(rx, ry));
+    grad.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
+    grad.addColorStop(0.5, `rgba(240, 248, 255, ${alpha * 0.75})`);
+    grad.addColorStop(0.8, `rgba(224, 242, 254, ${alpha * 0.3})`);
+    grad.addColorStop(1, 'rgba(224, 242, 254, 0)');
+    c.fillStyle = grad;
+    c.beginPath();
+    c.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    c.fill();
+  };
+
+  // Base layered painterly cloud cluster
+  drawPuff(256, 140, 160, 60, 0.9);
+  drawPuff(180, 150, 110, 50, 0.85);
+  drawPuff(330, 145, 120, 55, 0.85);
+  drawPuff(220, 110, 90, 50, 0.95);
+  drawPuff(290, 105, 100, 55, 0.95);
+  drawPuff(140, 160, 70, 35, 0.6);
+  drawPuff(380, 155, 80, 40, 0.6);
+
   const tex = new THREE.CanvasTexture(cv);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
@@ -24,16 +41,17 @@ function cloudTex(): THREE.Texture {
  * A three-stop painted gradient dome plus a handful of flat cel clouds.
  */
 export function buildSky(scene: THREE.Scene | THREE.Group, radius = 500) {
+  const isBirthday = BirthdayThemeConfig.enabled;
   const geo = new THREE.SphereGeometry(radius, 32, 20);
   const mat = new THREE.ShaderMaterial({
     side: THREE.BackSide,
-    depthWrite: true, // Must be true so depth buffer works!
+    depthWrite: true,
     fog: false,
     toneMapped: true,
     uniforms: {
-      uTop: { value: new THREE.Color(PAL.skyTop) },
-      uMid: { value: new THREE.Color(PAL.skyMid) },
-      uHaze: { value: new THREE.Color(PAL.skyHaze) },
+      uTop: { value: new THREE.Color(isBirthday ? BirthdayThemeConfig.sky.top : PAL.skyTop) },
+      uMid: { value: new THREE.Color(isBirthday ? BirthdayThemeConfig.sky.middle : PAL.skyMid) },
+      uHaze: { value: new THREE.Color(isBirthday ? BirthdayThemeConfig.sky.horizon : PAL.skyHaze) },
       uBands: { value: 26.0 },
     },
     vertexShader: /* glsl */ `
@@ -60,14 +78,6 @@ export function buildSky(scene: THREE.Scene | THREE.Group, radius = 500) {
 
         vec3 col = mix( uHaze, uMid, smoothstep( 0.0, 0.35, t ) );
         col = mix( col, uTop, smoothstep( 0.30, 0.85, t ) );
-
-        // Sun glow
-        vec3 sunDir = normalize(vec3(-80.0, 25.0, 60.0));
-        float sunDot = max(dot(dir, sunDir), 0.0);
-        float sunGlow = pow(sunDot, 8.0) * 0.6 + pow(sunDot, 32.0) * 0.4;
-        vec3 sunColor = vec3(1.0, 0.9, 0.7);
-        col += sunColor * sunGlow * smoothstep(-0.1, 0.2, h);
-
         col = mix( col, uHaze, smoothstep( 0.12, -0.05, h ) * 0.8 );
         
         gl_FragColor = vec4( col, 1.0 );
@@ -81,25 +91,78 @@ export function buildSky(scene: THREE.Scene | THREE.Group, radius = 500) {
   dome.renderOrder = -10;
   scene.add(dome);
 
-  // --- flat clouds ---
+  // --- Real Texture Luminous Moon in the night sky ---
+  if (isBirthday) {
+    const moonGroup = new THREE.Group();
+    
+    // Soft atmospheric halo behind the moon
+    const haloGeo = new THREE.PlaneGeometry(75, 75);
+    const cvHalo = document.createElement('canvas');
+    cvHalo.width = 256; cvHalo.height = 256;
+    const cHalo = cvHalo.getContext('2d')!;
+    const gHalo = cHalo.createRadialGradient(128, 128, 0, 128, 128, 120);
+    gHalo.addColorStop(0, 'rgba(224, 242, 254, 0.8)');
+    gHalo.addColorStop(0.35, 'rgba(186, 230, 253, 0.4)');
+    gHalo.addColorStop(0.7, 'rgba(125, 211, 252, 0.12)');
+    gHalo.addColorStop(1, 'rgba(125, 211, 252, 0)');
+    cHalo.fillStyle = gHalo;
+    cHalo.beginPath(); cHalo.arc(128, 128, 120, 0, Math.PI * 2); cHalo.fill();
+
+    const haloTex = new THREE.CanvasTexture(cvHalo);
+    const haloMat = new THREE.MeshBasicMaterial({ 
+      map: haloTex, 
+      transparent: true, 
+      opacity: 0.85, 
+      fog: false, 
+      depthWrite: false, 
+      side: THREE.DoubleSide 
+    });
+    const haloMesh = new THREE.Mesh(haloGeo, haloMat);
+    haloMesh.position.set(0, 0, -0.5);
+    haloMesh.renderOrder = -8;
+    moonGroup.add(haloMesh);
+
+    // Exact high-contrast luminous moon image from user
+    const moonTex = new THREE.TextureLoader().load('/assets/birthday/moon.jpg');
+    moonTex.colorSpace = THREE.SRGBColorSpace;
+    const moonMat = new THREE.MeshBasicMaterial({
+      map: moonTex,
+      fog: false,
+      depthWrite: false,
+      transparent: true,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending
+    });
+    const moonMesh = new THREE.Mesh(new THREE.PlaneGeometry(36, 36), moonMat);
+    moonMesh.renderOrder = -7;
+    moonGroup.add(moonMesh);
+
+    moonGroup.position.set(-150, 140, 110);
+    moonGroup.lookAt(0, 0, 0);
+    scene.add(moonGroup);
+  }
+
+  // --- Natural soft painterly clouds ---
   const tex = cloudTex();
   const rng = rngKit(7781);
   const clouds = new THREE.Group();
-  const matA = flat({ color: PAL.cloud, map: tex, transparent: true, opacity: 0.62, depthWrite: false, fog: false, cache: false });
-  const matB = flat({ color: PAL.cloudShade, map: tex, transparent: true, opacity: 0.34, depthWrite: false, fog: false, cache: false });
+  const cloudColA = isBirthday ? 0x94a3b8 : PAL.cloud;
+  const cloudColB = isBirthday ? 0x475569 : PAL.cloudShade;
+  const matA = flat({ color: cloudColA, map: tex, transparent: true, opacity: isBirthday ? 0.55 : 0.62, depthWrite: false, fog: false, cache: false });
+  const matB = flat({ color: cloudColB, map: tex, transparent: true, opacity: isBirthday ? 0.35 : 0.34, depthWrite: false, fog: false, cache: false });
   if (matA.map) {
     matA.map.wrapS = matA.map.wrapT = THREE.ClampToEdgeWrapping;
   }
 
-  for (let i = 0; i < 22; i++) {
-    const r = rng.range(220, 350);
+  for (let i = 0; i < (isBirthday ? 16 : 22); i++) {
+    const r = rng.range(240, 400);
     const a = rng.range(0, Math.PI * 2);
-    const w = rng.range(90, 210);
-    const h = w * rng.range(0.24, 0.34);
-    const y = rng.range(46, 140);
+    const w = rng.range(140, 280);
+    const h = w * rng.range(0.35, 0.48);
+    const y = rng.range(70, 170);
     const g = new THREE.Group();
     const back = new THREE.Mesh(new THREE.PlaneGeometry(w, h), matB);
-    back.position.set(2, -h * 0.1, -1.5);
+    back.position.set(4, -h * 0.08, -2.5);
     const front = new THREE.Mesh(new THREE.PlaneGeometry(w, h), matA);
     g.add(back, front);
     g.position.set(Math.cos(a) * r, y, Math.sin(a) * r);

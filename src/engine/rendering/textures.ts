@@ -269,15 +269,25 @@ export const crossingSign = () =>
 export const stationSign = () =>
   cached('stationSign', () =>
     make(768, 192, (c, w, h) => {
+      const isBirthday = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('event') === 'sahithi';
       c.fillStyle = '#fbfaf6';
       c.fillRect(0, 0, w, h);
       c.fillStyle = hex(PAL.teal);
       c.fillRect(0, h - 22, w, 22);
-      centered(c, 'ひばり台', w / 2, h * 0.42, w * 0.7, 104, '#2b3346', 'bold', 12);
-      c.font = `600 34px ${JP_FONT}`;
-      c.fillStyle = '#8a8fa0';
-      c.textAlign = 'center';
-      c.fillText('HIBARIDAI', w / 2, h * 0.82);
+      if (isBirthday) {
+        c.font = `600 28px monospace`;
+        c.fillStyle = '#2b3346';
+        c.textAlign = 'center';
+        c.fillText('SPECIAL DESTINATION: SAHITHI', w / 2, h * 0.5);
+        c.fillStyle = '#8a8fa0';
+        c.fillText('PLATFORM 01', w / 2, h * 0.75);
+      } else {
+        centered(c, 'ひばり台', w / 2, h * 0.42, w * 0.7, 104, '#2b3346', 'bold', 12);
+        c.font = `600 34px ${JP_FONT}`;
+        c.fillStyle = '#8a8fa0';
+        c.textAlign = 'center';
+        c.fillText('HIBARIDAI', w / 2, h * 0.82);
+      }
     })
   );
 
@@ -3582,27 +3592,36 @@ export const railPlate = (variant = 0) =>
     })
   );
 
+import { BirthdayThemeConfig } from '../world/BirthdayThemeConfig';
+
 /**
  * The 遊歩道 fingerpost plates.  One per plate, because a fingerpost carries a
  * destination and a distance and nothing else.
  */
 export const trailSign = (variant = 0) =>
-  cached('trailSign' + variant, () =>
+  cached('trailSign' + variant + (BirthdayThemeConfig.enabled ? '_bd_v2' : ''), () =>
     make(512, 128, (c, w, h) => {
-      const sets = [
+      const normalSets = [
         ['HOME', 'About Me'], ['TECH LAB', 'Projects'], ['SECURITY LAB', 'Experience'],
         ['STATION', 'Contact'], ['LIBRARY', 'Resume'], ['DISTRICT MAP', 'You are here'],
       ];
+      const bdSets = [
+        ['🐱 CAT SANCTUARY', 'Cake & Cat Choir'],
+        ['🎬 ROOFTOP THEATRE', 'Cinema & Stargazing'],
+        ['✨ AURA LAB', 'Personality Diagnostic'],
+        ['🌸 SAKURA PLAZA', 'Hero Tree & Lanterns'],
+      ];
+      const sets = BirthdayThemeConfig.enabled ? bdSets : normalSets;
       const [t, d] = sets[variant % sets.length];
-      c.fillStyle = '#f3ecdc';
+      c.fillStyle = BirthdayThemeConfig.enabled ? '#fff5f7' : '#f3ecdc';
       c.fillRect(0, 0, w, h);
-      rule(c, 0, 0, w, 8, 0x6f5943);
-      rule(c, 0, h - 8, w, 8, 0x6f5943);
+      rule(c, 0, 0, w, 8, BirthdayThemeConfig.enabled ? 0xf472b6 : 0x6f5943);
+      rule(c, 0, h - 8, w, 8, BirthdayThemeConfig.enabled ? 0xf472b6 : 0x6f5943);
       if (d) {
-        centered(c, t, w / 2, h * 0.38, w - 60, 48, '#4a3b2a', 'bold', 2);
-        centered(c, d, w / 2, h * 0.72, w - 60, 32, '#7f6a52', '600', 0);
+        centered(c, t, w / 2, h * 0.38, w - 40, 46, BirthdayThemeConfig.enabled ? '#831843' : '#4a3b2a', 'bold', 2);
+        centered(c, d, w / 2, h * 0.72, w - 40, 30, BirthdayThemeConfig.enabled ? '#be185d' : '#7f6a52', '600', 0);
       } else {
-        centered(c, t, w / 2, h * 0.52, w - 60, 52, '#4a3b2a', 'bold', 2);
+        centered(c, t, w / 2, h * 0.52, w - 40, 50, BirthdayThemeConfig.enabled ? '#831843' : '#4a3b2a', 'bold', 2);
       }
     })
   );

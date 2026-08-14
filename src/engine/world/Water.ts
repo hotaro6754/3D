@@ -3,6 +3,7 @@ import type { PortfolioContext } from '../core/Context';
 import { Simplex, clamp } from '../core/Noise';
 import { waterSwellNormal, waterChopNormal, waterDetailTexture } from '../rendering/WaterMaterials';
 import { PAL } from '../rendering/palette';
+import { BirthdayThemeConfig } from './BirthdayThemeConfig';
 
 /**
  * Water — the bay closing Pallet Town to the north.
@@ -420,12 +421,12 @@ export function buildWater(ctx: PortfolioContext): void {
     uSwell: { value: swell },
     uChop: { value: chop },
     uDetail: { value: detail },
-    uShallow: { value: new THREE.Color(0x3ab3a9).convertSRGBToLinear() }, // More turquoise
-    uDeep: { value: new THREE.Color(0x0c6478).convertSRGBToLinear() }, // Deeper blue-green
-    uFoamColor: { value: new THREE.Color(COLOR_FOAM).convertSRGBToLinear() },
-    uSkyTint: { value: new THREE.Color(PAL.skyMid).convertSRGBToLinear().multiplyScalar(0.8) },
-    uSunDir: { value: new THREE.Vector3(-80, 25, 60).normalize() },
-    uSunColor: { value: new THREE.Color(PAL.sun).convertSRGBToLinear() },
+    uShallow: { value: new THREE.Color(BirthdayThemeConfig.enabled ? 0x2dd4bf : 0x3ab3a9).convertSRGBToLinear() }, // Vibrant crystalline cyan shallows
+    uDeep: { value: new THREE.Color(BirthdayThemeConfig.enabled ? 0x0f172a : 0x0c6478).convertSRGBToLinear() }, // Deep twilight blue
+    uFoamColor: { value: new THREE.Color(BirthdayThemeConfig.enabled ? 0xfbcfe8 : COLOR_FOAM).convertSRGBToLinear() }, // Soft sakura-tinted water foam
+    uSkyTint: { value: new THREE.Color(BirthdayThemeConfig.enabled ? 0x67e8f9 : PAL.skyMid).convertSRGBToLinear().multiplyScalar(0.8) },
+    uSunDir: { value: new THREE.Vector3(BirthdayThemeConfig.enabled ? -40 : -80, BirthdayThemeConfig.enabled ? 55 : 25, BirthdayThemeConfig.enabled ? 65 : 60).normalize() },
+    uSunColor: { value: new THREE.Color(BirthdayThemeConfig.enabled ? 0xe0f2fe : PAL.sun).convertSRGBToLinear() },
   };
 
   const mat = new THREE.MeshPhysicalMaterial({

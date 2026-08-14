@@ -66,9 +66,9 @@ export class NavigationMarker {
     this.innerMesh.position.y = Math.sin(this.time * 4.0) * 0.5;
     
     // Check proximity to player to advance tour
-    if (this.ctx && this.ctx.player && !this.advancing) {
-      const dx = this.marker.position.x - this.ctx.player.position.x;
-      const dz = this.marker.position.z - this.ctx.player.position.z;
+    if (this.ctx && this.ctx.player && this.ctx.player.state && !this.advancing) {
+      const dx = this.marker.position.x - this.ctx.player.state.position.x;
+      const dz = this.marker.position.z - this.ctx.player.state.position.z;
       const distSq = dx * dx + dz * dz;
       
       // If within 10 meters, advance tour

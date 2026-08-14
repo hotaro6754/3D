@@ -177,15 +177,22 @@ export function buildTerrain(ctx: PortfolioContext) {
 
   ctx.scene.add(bridgeGroup);
 
-  ctx.collision.groundHeight = (x, z) => {
+  ctx.collision.groundHeight = (x: number, z: number, playerY?: number) => {
     // 1. Check physical floors added by builders (e.g. stairs, rooftops)
-    let maxFloorY = -Infinity;
+    let bestFloorY = -Infinity;
     for (const floor of ctx.collision.floors) {
       if (Math.abs(x - floor.cx) <= floor.hx && Math.abs(z - floor.cz) <= floor.hz) {
-        if (floor.y > maxFloorY) maxFloorY = floor.y;
+        if (playerY !== undefined) {
+          // Choose the highest floor that is below or within step range
+          if (floor.y <= playerY + 0.65 && floor.y > bestFloorY) {
+            bestFloorY = floor.y;
+          }
+        } else {
+          if (floor.y > bestFloorY) bestFloorY = floor.y;
+        }
       }
     }
-    if (maxFloorY > -Infinity) return maxFloorY;
+    if (bestFloorY > -Infinity) return bestFloorY;
 
     // 2. Fallback to analytical terrain/bridge
     if (z > -6 && z < 6 && x > -15 && x < -5) return 0.5; // bridge deck height

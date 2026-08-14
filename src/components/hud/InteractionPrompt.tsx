@@ -50,6 +50,13 @@ export const InteractionPrompt: React.FC<InteractionPromptProps> = ({ system, in
         {focusedItem && (
           <motion.div
             key={focusedItem.label}
+            onClick={() => {
+              if (!isActivating) {
+                setIsActivating(true);
+                activate();
+                setTimeout(() => setIsActivating(false), 150);
+              }
+            }}
             initial={{ opacity: 0, x: -80, skewX: -15, scale: 0.9 }}
             animate={{ 
               opacity: 1, 
@@ -68,6 +75,8 @@ export const InteractionPrompt: React.FC<InteractionPromptProps> = ({ system, in
               display: 'flex',
               alignItems: 'center',
               gap: '16px',
+              cursor: 'pointer',
+              pointerEvents: 'auto',
             }}
           >
             {/* Key Hint Block */}

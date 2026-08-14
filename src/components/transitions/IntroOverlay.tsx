@@ -1,4 +1,5 @@
 import React from 'react';
+import { BirthdayThemeConfig } from '../../engine/world/BirthdayThemeConfig';
 import { motion } from 'framer-motion';
 
 interface IntroOverlayProps {
@@ -6,6 +7,7 @@ interface IntroOverlayProps {
 }
 
 export const IntroOverlay: React.FC<IntroOverlayProps> = ({ onEnter }) => {
+  const isBirthday = BirthdayThemeConfig.enabled;
   return (
     <motion.div
       initial={{ opacity: 1 }}
@@ -34,49 +36,53 @@ export const IntroOverlay: React.FC<IntroOverlayProps> = ({ onEnter }) => {
         animate={{ x: 0, opacity: 1, skewX: -15 }}
         transition={{ type: 'spring', damping: 15, stiffness: 100, delay: 0.1 }}
         style={{ 
-          fontSize: '6rem', 
+          fontSize: isBirthday ? '4.2rem' : '6rem', 
           margin: 0, 
-          lineHeight: 0.9,
-          letterSpacing: '0.05em', 
-          color: '#00ffff',
-          textShadow: '4px 4px 0 #000000, 8px 8px 0 rgba(0,255,255,0.3)',
-          fontWeight: 900
+          lineHeight: 0.95,
+          letterSpacing: '0.08em', 
+          color: isBirthday ? '#fbcfe8' : '#00ffff',
+          textShadow: `4px 4px 0 #000000, 8px 8px 0 rgba(${isBirthday ? '244,114,182' : '0,255,255'},0.3)`,
+          fontWeight: 900,
+          textAlign: 'center'
         }}
       >
-        HARSHITH
+        {isBirthday ? 'HAPPY BIRTHDAY' : 'HARSHITH'}
       </motion.h1>
-      <motion.h1 
-        initial={{ x: 100, opacity: 0, skewX: -15 }}
-        animate={{ x: 0, opacity: 1, skewX: -15 }}
-        transition={{ type: 'spring', damping: 15, stiffness: 100, delay: 0.2 }}
-        style={{ 
-          fontSize: '6rem', 
-          margin: 0, 
-          lineHeight: 0.9,
-          letterSpacing: '0.05em', 
-          color: '#ff003c',
-          textShadow: '4px 4px 0 #000000, 8px 8px 0 rgba(255,0,60,0.3)',
-          fontWeight: 900
-        }}
-      >
-        GANGARAJU
-      </motion.h1>
+      {!isBirthday && (
+        <motion.h1 
+          initial={{ x: 100, opacity: 0, skewX: -15 }}
+          animate={{ x: 0, opacity: 1, skewX: -15 }}
+          transition={{ type: 'spring', damping: 15, stiffness: 100, delay: 0.2 }}
+          style={{ 
+            fontSize: '6rem', 
+            margin: 0, 
+            lineHeight: 0.9,
+            letterSpacing: '0.05em', 
+            color: '#ff003c',
+            textShadow: `4px 4px 0 #000000, 8px 8px 0 rgba(255,0,60,0.3)`,
+            fontWeight: 900,
+            textAlign: 'center'
+          }}
+        >
+          GANGARAJU
+        </motion.h1>
+      )}
       <motion.p 
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.4, duration: 0.4 }}
         style={{ 
-          fontSize: '1.2rem', 
+          fontSize: isBirthday ? '1.05rem' : '1.2rem', 
           marginTop: '1.5rem', 
           letterSpacing: '0.3em',
-          backgroundColor: '#ffffff',
-          color: '#000000',
-          padding: '0.5rem 1rem',
+          backgroundColor: isBirthday ? '#f472b6' : '#ffffff',
+          color: isBirthday ? '#ffffff' : '#000000',
+          padding: '0.5rem 1.2rem',
           fontWeight: 'bold',
           clipPath: 'polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)'
         }}
       >
-        AI &times; SECURITY &times; SOFTWARE
+        {isBirthday ? '// A SMALL NIGHT WALK' : 'AI \u00d7 SECURITY \u00d7 SOFTWARE'}
       </motion.p>
       
       {/* Minimalist District Map */}
@@ -112,24 +118,24 @@ export const IntroOverlay: React.FC<IntroOverlayProps> = ({ onEnter }) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8, type: 'spring' }}
-        whileHover={{ scale: 1.05, backgroundColor: '#00ffff', color: '#000000', skewX: -10 }}
+        whileHover={{ scale: 1.05, backgroundColor: isBirthday ? '#baa6ff' : '#00ffff', color: '#000000', skewX: -10 }}
         whileTap={{ scale: 0.95 }}
         style={{
           marginTop: '2rem',
           padding: '1.2rem 3rem',
           fontSize: '1.4rem',
-          background: 'rgba(0, 255, 255, 0.1)',
+          background: isBirthday ? 'rgba(186, 166, 255, 0.1)' : 'rgba(0, 255, 255, 0.1)',
           border: 'none',
-          color: '#00ffff',
+          color: isBirthday ? '#baa6ff' : '#00ffff',
           cursor: 'pointer',
           letterSpacing: '0.15em',
           fontWeight: 900,
           transition: 'all 0.1s ease',
           outline: 'none',
-          boxShadow: '4px 4px 0 rgba(0, 255, 255, 0.3)'
+          boxShadow: `4px 4px 0 rgba(${isBirthday ? '186,166,255' : '0,255,255'}, 0.3)`
         }}
       >
-        [ BEGIN TOUR ]
+        {isBirthday ? '[ ENTER ]' : '[ BEGIN TOUR ]'}
       </motion.button>
     </motion.div>
   );

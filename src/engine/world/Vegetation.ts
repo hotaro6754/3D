@@ -13,234 +13,225 @@ import { bake, trs, rngKit } from '../rendering/util';
  * three tones give the canopy internal shape without any texture.
  * ------------------------------------------------------------------ */
 
-const BLOB_TONES = [PAL.blossomLight, PAL.blossom, PAL.blossomDeep, 0xffe4e1, 0xffb7c5];
-const BLOB_TINT = [0xe2c3d2, 0xd8b2c6, 0xc99cba, 0xe8d0d8, 0xdfbac6];
+const BLOB_TONES = [
+  0xfce7f3, // 0: Outer soft cherry blossom highlight pastel (#fce7f3)
+  0xfbcfe8, // 1: Soft cherry blossom pastel (#fbcfe8)
+  0xf9a8d4, // 2: Mid blossom pink (#f9a8d4)
+  0xf472b6, // 3: Darker pink inner foliage (#f472b6)
+  0xec4899, // 4: Deep inner foliage / core shadow (#ec4899)
+];
+const BLOB_TINT = [0x784a70, 0x763f68, 0x6e325b, 0x65244e, 0x54183d];
 const sakuraUniforms = { uTime: { value: 0 } };
 let sakuraUniformsBound = false;
-let sakuraPetalsBuilt = false;
-
-function addPetalSystemOnce(ctx) {
-  if (sakuraPetalsBuilt) return;
-  sakuraPetalsBuilt = true;
-  
-  const petalCount = 500;
-  const petalGeo = new THREE.PlaneGeometry(0.12, 0.18, 2, 2);
-  const pos = petalGeo.attributes.position;
-  for (let i = 0; i < pos.count; i++) {
-    const y = pos.getY(i);
-    const x = pos.getX(i);
-    pos.setZ(i, (x * x + y * y) * 0.4);
-  }
-  petalGeo.computeVertexNormals();
-
-  const petalMat = new THREE.MeshBasicMaterial({
-    color: 0xffb7c5,
-    side: THREE.DoubleSide,
-  });
-  
-  petalMat.onBeforeCompile = (shader) => {
-    shader.uniforms.uTime = sakuraUniforms.uTime;
-    shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nuniform float uTime;\n')
-      .replace('#include <begin_vertex>', `
-        #include <begin_vertex>
-        #ifdef USE_INSTANCING
-          vec3 iPos = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-        #else
-          vec3 iPos = vec3(0.0);
-        #endif
-        
-        float t = uTime * 0.5 + iPos.x * 12.34 + iPos.z * 56.78;
-        float fallSpeed = 0.4 + sin(iPos.x) * 0.1;
-        
-        // Gentle downward drift, accumulates near ground then resets
-        float y = mod(iPos.y - t * fallSpeed + 10.0, 20.0) - 2.0;
-        
-        // Accumulate near ground (y=0) by slowing down vertically
-        if (y < 0.5 && y > -1.0) {
-           y = max(-0.5, y * 0.2); 
-        }
-        
-        float driftX = sin(t * 0.8 + iPos.y) * 3.0 + (iPos.y - y) * 0.2;
-        float driftZ = cos(t * 0.6 + iPos.x) * 3.0 + (iPos.y - y) * 0.2;
-        
-        float finalX = mod(iPos.x + driftX + 50.0, 100.0) - 50.0;
-        float finalZ = mod(iPos.z + driftZ + 50.0, 100.0) - 50.0;
-        vec3 finalPos = vec3(finalX, y, finalZ);
-        
-        float rotX = t * 1.5 + iPos.x;
-        float rotY = t * 1.0 + iPos.y;
-        float rotZ = t * 0.5 + iPos.z;
-        
-        mat3 rotMatX = mat3(1.0, 0.0, 0.0, 0.0, cos(rotX), -sin(rotX), 0.0, sin(rotX), cos(rotX));
-        mat3 rotMatY = mat3(cos(rotY), 0.0, sin(rotY), 0.0, 1.0, 0.0, -sin(rotY), 0.0, cos(rotY));
-        mat3 rotMatZ = mat3(cos(rotZ), -sin(rotZ), 0.0, sin(rotZ), cos(rotZ), 0.0, 0.0, 0.0, 1.0);
-        
-        transformed = rotMatZ * rotMatY * rotMatX * position;
-        transformed += finalPos - iPos;
-      `);
-  };
-  petalMat.customProgramCacheKey = () => 'sakuraPetals_breeze';
-
-  const instMesh = new THREE.InstancedMesh(petalGeo, petalMat, petalCount);
-  const dummy = new THREE.Object3D();
-  for (let i = 0; i < petalCount; i++) {
-    dummy.position.set(
-      (Math.random() - 0.5) * 150, 
-      Math.random() * 30 - 5, 
-      (Math.random() - 0.5) * 150
-    );
-    dummy.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-    dummy.scale.setScalar(Math.random() * 0.4 + 0.6);
-    dummy.updateMatrix();
-    instMesh.setMatrixAt(i, dummy.matrix);
-  }
-  instMesh.name = 'sakuraPetals';
-  ctx.add(instMesh);
-}
 
 /**
- * @param spots [{ x, z, y, scale, seed, lean, tone }]
+ * @param spots [{ x, z, y, scale, seed, lean, leanDir, isHero, tone }]
  */
 export function buildSakura(ctx, spots) {
   if (!sakuraUniformsBound) {
     ctx.tick(() => { sakuraUniforms.uTime.value = performance.now() / 1000.0; });
     sakuraUniformsBound = true;
   }
-  addPetalSystemOnce(ctx);
 
   const woodParts = [];
   const blobs = [[], [], [], [], []];
-  const trunkGeo = new THREE.CylinderGeometry(0.7, 1.0, 1, 7, 1);
-  const branchGeo = new THREE.CylinderGeometry(0.25, 0.55, 1, 5, 1);
-  const twigGeo = new THREE.CylinderGeometry(0.12, 0.3, 1, 4, 1);
+  const trunkGeo = new THREE.CylinderGeometry(0.68, 1.0, 1, 8, 1);
+  const branchGeo = new THREE.CylinderGeometry(0.32, 0.62, 1, 6, 1);
+  const twigGeo = new THREE.CylinderGeometry(0.14, 0.34, 1, 5, 1);
 
   for (const spot of spots) {
     const rng = rngKit(spot.seed ?? 1);
     const S = spot.scale ?? 1;
+    const isHero = spot.isHero === true || S >= 1.6;
     const x = spot.x;
     const z = spot.z;
     const y = spot.y ?? 0;
-    const lean = spot.lean ?? 0;
+    const lean = spot.lean ?? (isHero ? 0.08 : 0.05);
     const leanDir = spot.leanDir ?? rng.range(0, Math.PI * 2);
 
-    const trunkH = 2.5 * S * rng.range(0.9, 1.12);
-    const trunkR = 0.2 * S;
-    woodParts.push({
-      geometry: trunkGeo,
-      matrix: trs(x, y + trunkH / 2, z, lean * Math.sin(leanDir), 0, -lean * Math.cos(leanDir),
-        trunkR, trunkH, trunkR),
-    });
-    // root flare
-    woodParts.push({
-      geometry: trunkGeo,
-      matrix: trs(x, y + 0.16 * S, z, 0, 0, 0, trunkR * 1.5, 0.34 * S, trunkR * 1.5),
-    });
+    // Trunk sizing: Hero tree is significantly more massive and majestic
+    const trunkH = (isHero ? 3.6 : 2.7) * S * rng.range(0.94, 1.08);
+    const trunkR = (isHero ? 0.34 : 0.22) * S;
 
-    /* Where the trunk actually ends.
-     *
-     * The trunk is a cylinder rotated about its own *centre* by the Euler
-     * (lean·sin d, 0, -lean·cos d) above, so its tip is the centre plus that
-     * rotation applied to (0, trunkH/2, 0) -- and the small-angle form of that
-     * is (h·lean·cos d, h, h·lean·sin d), not (0.9·trunkH·lean·sin d, …,
-     * -0.9·trunkH·lean·cos d).  The old expression had sin and cos swapped and
-     * used 0.9·trunkH where the half-height belongs, so the limbs and the whole
-     * blossom mass were planted about 0.4 m away from a trunk top 0.17 m
-     * across, at ninety degrees to the lean.  Every tree in the world was
-     * detached from its own canopy, in a different direction each time.
-     *
-     * Applied exactly rather than approximated, so it stays right if anything
-     * ever leans hard. */
-    const tip = new THREE.Vector3(0, trunkH / 2, 0)
-      .applyEuler(new THREE.Euler(lean * Math.sin(leanDir), 0, -lean * Math.cos(leanDir)));
-    const topX = x + tip.x;
-    const topZ = z + tip.z;
-    const topY = y + trunkH / 2 + tip.y;
+    // Multi-segment organic curved trunk
+    const eul = new THREE.Euler(lean * Math.sin(leanDir), 0, -lean * Math.cos(leanDir));
+    const trunkSegs = isHero ? 3 : 2;
+    const segH = trunkH / trunkSegs;
+    const trunkTip = new THREE.Vector3(0, trunkH, 0).applyEuler(eul);
+    const topX = x + trunkTip.x;
+    const topY = y + trunkH + trunkTip.y * 0.15;
+    const topZ = z + trunkTip.z;
 
-    // main limbs - increased for more branching
-    const limbs = 4 + Math.floor(rng.next() * 3);
+    for (let s = 0; s < trunkSegs; s++) {
+      const u = s / trunkSegs;
+      const uNext = (s + 1) / trunkSegs;
+      const rTop = trunkR * (1.3 - uNext * 0.45);
+      const segCenter = new THREE.Vector3(
+        x + trunkTip.x * (u + uNext) * 0.5,
+        y + segH * (s + 0.5),
+        z + trunkTip.z * (u + uNext) * 0.5
+      );
+      woodParts.push({
+        geometry: trunkGeo,
+        matrix: trs(segCenter.x, segCenter.y, segCenter.z, eul.x, 0, eul.z, rTop, segH, rTop),
+      });
+    }
+
+    // Organic root flares / buttresses radiating into ground
+    const flareCount = isHero ? 5 : 3;
+    for (let f = 0; f < flareCount; f++) {
+      const fAng = (f / flareCount) * Math.PI * 2 + rng.range(-0.3, 0.3);
+      const fDist = trunkR * (isHero ? 1.9 : 1.5);
+      const fx = x + Math.cos(fAng) * fDist * 0.6;
+      const fz = z + Math.sin(fAng) * fDist * 0.6;
+      woodParts.push({
+        geometry: trunkGeo,
+        matrix: trs(fx, y + 0.18 * S, fz, rng.range(-0.2, 0.2), fAng, rng.range(-0.2, 0.2), trunkR * 1.6, 0.42 * S, trunkR * 1.3),
+      });
+    }
+
+    // Limbs: Hero tree has 7-9 major limbs spreading wide; regular trees have 4-6
+    const limbs = isHero ? (7 + Math.floor(rng.next() * 3)) : (4 + Math.floor(rng.next() * 2));
     const canopyCenters = [];
+    const innerCenters = [];
+    const outerCenters = [];
+
     for (let i = 0; i < limbs; i++) {
-      const a = (i / limbs) * Math.PI * 2 + rng.range(-0.4, 0.4);
-      const len = 1.9 * S * rng.range(0.82, 1.2);
-      const tilt = rng.range(0.5, 0.85);
+      const a = (i / limbs) * Math.PI * 2 + rng.range(-0.35, 0.35);
+      const reachMult = isHero ? rng.range(1.15, 1.45) : rng.range(0.9, 1.2);
+      const len = (isHero ? 2.6 : 1.9) * S * reachMult;
+      const tilt = isHero ? rng.range(0.65, 1.1) : rng.range(0.55, 0.9);
+      
       const ex = topX + Math.cos(a) * Math.sin(tilt) * len;
       const ez = topZ + Math.sin(a) * Math.sin(tilt) * len;
-      const ey = topY + Math.cos(tilt) * len;
+      const ey = topY + Math.cos(tilt) * len * (isHero ? 0.75 : 0.85);
+
       const mid = new THREE.Vector3((topX + ex) / 2, (topY + ey) / 2, (topZ + ez) / 2);
       const dir = new THREE.Vector3(ex - topX, ey - topY, ez - topZ);
       const l = dir.length();
       const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
-      const m = new THREE.Matrix4().compose(mid, q, new THREE.Vector3(0.13 * S, l, 0.13 * S));
-      woodParts.push({ geometry: branchGeo, matrix: m });
+      const bRad = (isHero ? 0.18 : 0.13) * S;
+
+      woodParts.push({
+        geometry: branchGeo,
+        matrix: new THREE.Matrix4().compose(mid, q, new THREE.Vector3(bRad, l, bRad)),
+      });
+
+      innerCenters.push(mid);
       canopyCenters.push(new THREE.Vector3(ex, ey, ez));
 
-      // one fork per limb
-      if (rng.next() < 0.75) {
+      // Secondary forks (1 to 2 per primary limb on Hero, 1 on standard)
+      const forks = isHero ? (rng.next() < 0.85 ? 2 : 1) : (rng.next() < 0.7 ? 1 : 0);
+      for (let fk = 0; fk < forks; fk++) {
+        const forkSpread = (fk === 0 ? 1 : -1) * rng.range(0.4, 0.8);
         const dir2 = dir.clone().normalize()
-          .add(new THREE.Vector3(rng.range(-0.7, 0.7), rng.range(0.1, 0.6), rng.range(-0.7, 0.7)))
+          .add(new THREE.Vector3(
+            rng.range(-0.6, 0.6) + Math.cos(a + forkSpread) * 0.5,
+            rng.range(0.1, 0.55),
+            rng.range(-0.6, 0.6) + Math.sin(a + forkSpread) * 0.5
+          ))
           .normalize();
-        const l2 = len * rng.range(0.5, 0.8);
+        const l2 = len * (isHero ? rng.range(0.55, 0.85) : rng.range(0.45, 0.75));
         const e2 = new THREE.Vector3(ex, ey, ez).addScaledVector(dir2, l2);
         const mid2 = new THREE.Vector3().addVectors(new THREE.Vector3(ex, ey, ez), e2).multiplyScalar(0.5);
         const q2 = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir2);
+        const tRad = (isHero ? 0.11 : 0.08) * S;
+
         woodParts.push({
           geometry: twigGeo,
-          matrix: new THREE.Matrix4().compose(mid2, q2, new THREE.Vector3(0.09 * S, l2, 0.09 * S)),
+          matrix: new THREE.Matrix4().compose(mid2, q2, new THREE.Vector3(tRad, l2, tRad)),
         });
+
+        outerCenters.push(e2);
         canopyCenters.push(e2);
+
+        // Tertiary fine twigs on hero tree for lush foliage support
+        if (isHero && rng.next() < 0.6) {
+          const dir3 = dir2.clone().normalize()
+            .add(new THREE.Vector3(rng.range(-0.5, 0.5), rng.range(-0.2, 0.4), rng.range(-0.5, 0.5)))
+            .normalize();
+          const l3 = l2 * rng.range(0.4, 0.65);
+          const e3 = e2.clone().addScaledVector(dir3, l3);
+          const mid3 = new THREE.Vector3().addVectors(e2, e3).multiplyScalar(0.5);
+          const q3 = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir3);
+          woodParts.push({
+            geometry: twigGeo,
+            matrix: new THREE.Matrix4().compose(mid3, q3, new THREE.Vector3(tRad * 0.7, l3, tRad * 0.7)),
+          });
+          outerCenters.push(e3);
+          canopyCenters.push(e3);
+        }
       }
     }
 
-    /* Blossom mass: sparse, irregular clusters to reveal branches. */
-    const count = 35 + Math.floor(rng.next() * 20);
-    let yMin = Infinity, yMax = -Infinity;
-    for (const c of canopyCenters) {
-      yMin = Math.min(yMin, c.y);
-      yMax = Math.max(yMax, c.y);
+    // ---------------------------------------------------------------
+    // Blossom Clouds: Layered anime stylized volumes
+    // ---------------------------------------------------------------
+    // ---------------------------------------------------------------
+    // Blossom Clouds: Large, majestic billowing anime canopy volumes
+    // ---------------------------------------------------------------
+    // 1. Inner core foliage (Darker pink #f472b6 & deep #db2777)
+    const innerCount = isHero ? 8 : 4;
+    for (let i = 0; i < innerCount; i++) {
+      const c = innerCenters.length > 0 && rng.next() < 0.75
+        ? innerCenters[Math.floor(rng.next() * innerCenters.length)]
+        : new THREE.Vector3(topX, topY, topZ);
+      const r = (isHero ? 1.2 : 0.85) * S * rng.range(0.85, 1.15);
+      const px = c.x + rng.range(-0.4, 0.4) * S;
+      const py = c.y + rng.range(-0.2, 0.4) * S;
+      const pz = c.z + rng.range(-0.4, 0.4) * S;
+      const tone = rng.next() < 0.65 ? 3 : 4;
+      blobs[tone].push(trs(px, py, pz, 0, 0, 0, r, r * 0.9, r));
     }
-    for (let i = 0; i < count; i++) {
+
+    // 2. Mid-body voluminous blossom clouds (#fbcfe8 & #f9a8d4)
+    const midCount = isHero ? 16 : 8;
+    for (let i = 0; i < midCount; i++) {
       const c = canopyCenters[Math.floor(rng.next() * canopyCenters.length)];
-      const r = 0.28 * S * rng.range(0.5, 1.1);
-      const px = c.x + rng.range(-0.8, 0.8) * S;
-      const py = c.y + rng.range(-0.4, 0.8) * S;
-      const pz = c.z + rng.range(-0.8, 0.8) * S;
-      let tone;
-      if (spot.tone !== undefined) tone = spot.tone;
-      else {
-        const hi = (py - yMin) / Math.max(0.5, yMax + 1.2 * S - yMin);
-        tone = hi > 0.65 ? 0 : hi < 0.3 ? 2 : 1;
-        if (rng.next() < 0.2) tone = 3; 
-        if (rng.next() < 0.1) tone = 4;
-        if (rng.next() < 0.15) tone = (tone + 1) % 5;
-      }
-      blobs[tone].push(trs(px, py, pz,
-        rng.range(0, 3), rng.range(0, 3), rng.range(0, 3),
-        r, r * rng.range(0.65, 0.9), r));
+      const r = (isHero ? 1.4 : 0.95) * S * rng.range(0.9, 1.25);
+      const px = c.x + rng.range(-0.5, 0.5) * S;
+      const py = c.y + rng.range(-0.2, 0.4) * S;
+      const pz = c.z + rng.range(-0.5, 0.5) * S;
+      const tone = rng.next() < 0.55 ? 2 : 1;
+      blobs[tone].push(trs(px, py, pz, 0, 0, 0, r * 1.05, r * 0.88, r * 1.05));
     }
 
-    // a small cluster crowning the silhouette
-    for (let i = 0; i < 8; i++) {
-      const r = 0.45 * S * rng.range(0.7, 1.2);
-      const t = rng.next() < 0.5 ? 0 : (rng.next() < 0.5 ? 3 : 4);
-      blobs[t].push(trs(
+    // 3. Outer canopy layer & delicate perimeter puffs (#fce7f3 & #fbcfe8)
+    const outerCount = isHero ? 14 : 7;
+    const targetOuter = outerCenters.length > 0 ? outerCenters : canopyCenters;
+    for (let i = 0; i < outerCount; i++) {
+      const c = targetOuter[Math.floor(rng.next() * targetOuter.length)];
+      const r = (isHero ? 1.25 : 0.85) * S * rng.range(0.85, 1.15);
+      const px = c.x + rng.range(-0.6, 0.6) * S;
+      const py = c.y + rng.range(-0.3, 0.4) * S;
+      const pz = c.z + rng.range(-0.6, 0.6) * S;
+      const tone = rng.next() < 0.6 ? 1 : 0;
+      blobs[tone].push(trs(px, py, pz, 0, 0, 0, r * 1.05, r * 0.85, r * 1.05));
+    }
+
+    // 4. Crowning peak puffs on silhouette top (#fdf2f8 & #fce7f3)
+    const crownCount = isHero ? 8 : 4;
+    for (let i = 0; i < crownCount; i++) {
+      const r = (isHero ? 1.35 : 0.95) * S * rng.range(0.9, 1.2);
+      const tone = rng.next() < 0.65 ? 0 : 1;
+      blobs[tone].push(trs(
         topX + rng.range(-0.8, 0.8) * S,
-        topY + (1.2 + rng.range(0, 0.6)) * S,
+        topY + (isHero ? 1.1 : 0.75) * S + rng.range(0, 0.4) * S,
         topZ + rng.range(-0.8, 0.8) * S,
-        rng.range(0, 3), rng.range(0, 3), rng.range(0, 3),
-        r, r * 0.8, r
+        0, 0, 0,
+        r * 1.1, r * 0.8, r * 1.1
       ));
     }
 
-    /* 1.15 rather than 1.6: the collider was half a metre wider than the trunk
-     * it stands for, and the lineside footpath is only 1.15 m wide -- the tree
-     * on the crossing corner was closing the one route west to the shrine. */
+    // Collider
     if (spot.collide !== false) {
-      ctx.collide(x - trunkR * 1.15, z - trunkR * 1.15, x + trunkR * 1.15, z + trunkR * 1.15, y + trunkH);
+      const colR = trunkR * 1.25;
+      ctx.collide(x - colR, z - colR, x + colR, z + colR, y + trunkH);
     }
   }
 
-  const woodMat = cel({ color: PAL.trunk, bands: 3, tint: 0x8a7290, cache: false });
+  // Dark rich anime wood material with cool violet-tinted cel shading
+  const woodMat = cel({ color: PAL.trunkDark, bands: 3, tint: 0x6e526a, cache: false });
   const originalWoodOBC = woodMat.onBeforeCompile;
   const originalWoodKey = woodMat.customProgramCacheKey;
   woodMat.onBeforeCompile = (shader, renderer) => {
@@ -251,10 +242,10 @@ export function buildSakura(ctx, spots) {
       .replace('#include <begin_vertex>', `
         #include <begin_vertex>
         vec3 wPos = (modelMatrix * vec4(position, 1.0)).xyz;
-        float wTime = uTime * 1.2;
-        float sway = smoothstep(1.5, 8.0, wPos.y) * 0.08;
-        transformed.x += sin(wPos.x * 0.5 + wTime) * sway;
-        transformed.z += sin(wPos.z * 0.5 + wTime * 0.8) * sway;
+        float wTime = uTime * 1.1;
+        float sway = smoothstep(1.5, 8.0, wPos.y) * 0.06;
+        transformed.x += sin(wPos.x * 0.4 + wTime) * sway;
+        transformed.z += sin(wPos.z * 0.4 + wTime * 0.8) * sway;
       `);
   };
   woodMat.customProgramCacheKey = () => (originalWoodKey ? originalWoodKey.call(woodMat) : '') + '_sakuraWood';
@@ -265,11 +256,10 @@ export function buildSakura(ctx, spots) {
   wood.name = 'sakuraWood';
   ctx.add(wood);
 
-  const blobGeo = new THREE.DodecahedronGeometry(1, 0); // Low-poly anime aesthetic
+  // Smooth, organic billowing anime cherry blossom geometry
+  const blobGeo = new THREE.SphereGeometry(1, 20, 16);
   const canopies = [];
-  // Blossom keeps a pink cast even in shade: a violet tint turns it grey, and
-  // a normal ramp makes the away-facing side of the canopy read as mauve rock,
-  // so the canopy gets a deliberately high-key two-band ramp.
+
   blobs.forEach((list, i) => {
     if (!list.length) return;
     const parts = list.map(m => ({ geometry: blobGeo, matrix: m }));
@@ -286,36 +276,24 @@ export function buildSakura(ctx, spots) {
         .replace('#include <begin_vertex>', `
           #include <begin_vertex>
           vec3 wPos = (modelMatrix * vec4(position, 1.0)).xyz;
-          float wTime = uTime * 1.2;
-          float windX = sin(wPos.x * 0.5 + wTime) * 0.06 + sin(wPos.z * 0.3 + wTime * 0.8) * 0.04;
-          float windY = sin(wPos.x * 0.4 + wTime * 1.1) * 0.03;
-          float windZ = sin(wPos.z * 0.5 + wTime) * 0.06 + sin(wPos.x * 0.3 + wTime * 0.9) * 0.04;
-          // Apply wind
-          transformed.xyz += vec3(windX, windY, windZ) * 0.5;
+          float wTime = uTime * 1.1;
+          float windX = sin(wPos.x * 0.45 + wTime) * 0.05 + sin(wPos.z * 0.25 + wTime * 0.8) * 0.035;
+          float windY = sin(wPos.x * 0.35 + wTime * 1.0) * 0.025;
+          float windZ = sin(wPos.z * 0.45 + wTime) * 0.05 + sin(wPos.x * 0.25 + wTime * 0.9) * 0.035;
+          transformed.xyz += vec3(windX, windY, windZ) * 0.45;
         `);
     };
     mat.customProgramCacheKey = () => (originalKey ? originalKey.call(mat) : '') + '_sakuraCanopy';
 
     const mesh = new THREE.Mesh(mergedGeo, mat);
     mesh.castShadow = true;
-    /* Blossom does not *receive* shadow.
-     *
-     * The high-key ramp keeps the away-facing side of the canopy light, but a
-     * ramp only shapes *direct* light: once the shadow map zeroes the sun, the
-     * blob falls back to ambient and comes out as a dark violet lump.  A big
-     * cherry self-shadows heavily, so whole trees were going grey -- and an
-     * isolated dark blob against the sky reads as a rendering fault, not as
-     * shade.  Turning receive off makes the canopy behave the way blossom is
-     * actually painted: a flat high-key mass whose form comes from its three
-     * tones, lit the same wherever it stands.  It still casts, which is what
-     * dapples the ground underneath. */
-    mesh.receiveShadow = false;
+    mesh.receiveShadow = false; // Prevents canopy self-shadowing into muddy black holes
     mesh.name = 'sakuraCanopy' + i;
     ctx.add(mesh);
     canopies.push(mesh);
   });
 
-  [trunkGeo, branchGeo, twigGeo].forEach((g) => g.dispose());
+  [trunkGeo, branchGeo, twigGeo, blobGeo].forEach((g) => g.dispose());
   return { wood, canopies };
 }
 

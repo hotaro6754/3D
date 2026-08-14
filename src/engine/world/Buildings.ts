@@ -6,6 +6,7 @@ import { cel, flat } from '../rendering/toon';
 import { box, cyl, bake, trs, rngKit } from '../rendering/util';
 import { hullOutline } from '../rendering/outline';
 import { PortfolioContext } from '../core/Context';
+import { BirthdayThemeConfig } from './BirthdayThemeConfig';
 
 /* ------------------------------------------------------------------ *
  * Low-rise Japanese houses.
@@ -602,32 +603,64 @@ export function buildBuildings(ctx: PortfolioContext) {
     const hx = lm.w / 2;
     const hz = lm.d / 2;
     const t = 0.5; // wall thickness
-    const yTop = y + (lm.floors * floorH) + 1.0;
+    const yTop = y + (lm.floors * floorH);
     
-    // We create an array of colliders for this building so we can manage them if needed
+    // We create an array of colliders for this building based on which way it faces
     const colliders = [];
-    colliders.push(ctx.collision.addBox(lm.x, lm.z - hz + t/2, hx, t/2, y, yTop, 0, lm.name + '_back')); // Back (z-)
-    colliders.push(ctx.collision.addBox(lm.x - hx + t/2, lm.z, t/2, hz, y, yTop, 0, lm.name + '_left')); // Left (x-)
-    colliders.push(ctx.collision.addBox(lm.x + hx - t/2, lm.z, t/2, hz, y, yTop, 0, lm.name + '_right')); // Right (x+)
     
-    // For the front wall, we leave a gap for the door.
-    // The door is at doorU (from -w/2 to w/2) or similar?
-    // Wait, the door position in world space is (ix, iz), but shifted by 1.5.
-    // Let's just make the front wall in two pieces.
-    // Front wall pieces
+    // Add the 3 solid walls (non-front walls)
     if (lm.face === 'z+') {
-      // Front is z+
-      colliders.push(ctx.collision.addBox(lm.x - hx/2 - 0.7, lm.z + hz - t/2, hx/2 - 0.7, t/2, y, yTop, 0, lm.name + '_front_L'));
-      colliders.push(ctx.collision.addBox(lm.x + hx/2 + 0.7, lm.z + hz - t/2, hx/2 - 0.7, t/2, y, yTop, 0, lm.name + '_front_R'));
-    } else if (lm.face === 'x+') {
-      colliders.push(ctx.collision.addBox(lm.x + hx - t/2, lm.z - hz/2 - 0.7, t/2, hz/2 - 0.7, y, yTop, 0, lm.name + '_front_L'));
-      colliders.push(ctx.collision.addBox(lm.x + hx - t/2, lm.z + hz/2 + 0.7, t/2, hz/2 - 0.7, y, yTop, 0, lm.name + '_front_R'));
+      colliders.push(ctx.collision.addBox(lm.x, lm.z - hz + t/2, hx, t/2, y, yTop, 0, lm.name + '_back')); // z-
+      colliders.push(ctx.collision.addBox(lm.x - hx + t/2, lm.z, t/2, hz, y, yTop, 0, lm.name + '_left')); // x-
+      colliders.push(ctx.collision.addBox(lm.x + hx - t/2, lm.z, t/2, hz, y, yTop, 0, lm.name + '_right')); // x+
     } else if (lm.face === 'z-') {
-      colliders.push(ctx.collision.addBox(lm.x - hx/2 - 0.7, lm.z - hz + t/2, hx/2 - 0.7, t/2, y, yTop, 0, lm.name + '_front_L'));
-      colliders.push(ctx.collision.addBox(lm.x + hx/2 + 0.7, lm.z - hz + t/2, hx/2 - 0.7, t/2, y, yTop, 0, lm.name + '_front_R'));
+      colliders.push(ctx.collision.addBox(lm.x, lm.z + hz - t/2, hx, t/2, y, yTop, 0, lm.name + '_back')); // z+
+      colliders.push(ctx.collision.addBox(lm.x - hx + t/2, lm.z, t/2, hz, y, yTop, 0, lm.name + '_left')); // x-
+      colliders.push(ctx.collision.addBox(lm.x + hx - t/2, lm.z, t/2, hz, y, yTop, 0, lm.name + '_right')); // x+
+    } else if (lm.face === 'x+') {
+      colliders.push(ctx.collision.addBox(lm.x - hx + t/2, lm.z, t/2, hz, y, yTop, 0, lm.name + '_back')); // x-
+      colliders.push(ctx.collision.addBox(lm.x, lm.z - hz + t/2, hx, t/2, y, yTop, 0, lm.name + '_left')); // z-
+      colliders.push(ctx.collision.addBox(lm.x, lm.z + hz - t/2, hx, t/2, y, yTop, 0, lm.name + '_right')); // z+
     } else if (lm.face === 'x-') {
-      colliders.push(ctx.collision.addBox(lm.x - hx + t/2, lm.z - hz/2 - 0.7, t/2, hz/2 - 0.7, y, yTop, 0, lm.name + '_front_L'));
-      colliders.push(ctx.collision.addBox(lm.x - hx + t/2, lm.z + hz/2 + 0.7, t/2, hz/2 - 0.7, y, yTop, 0, lm.name + '_front_R'));
+      colliders.push(ctx.collision.addBox(lm.x + hx - t/2, lm.z, t/2, hz, y, yTop, 0, lm.name + '_back')); // x+
+      colliders.push(ctx.collision.addBox(lm.x, lm.z - hz + t/2, hx, t/2, y, yTop, 0, lm.name + '_left')); // z-
+      colliders.push(ctx.collision.addBox(lm.x, lm.z + hz - t/2, hx, t/2, y, yTop, 0, lm.name + '_right')); // z+
+    }
+    
+    // For the front wall, we leave a gap for the door at bldg.userData.doorU
+    const doorU = bldg.userData.doorU ?? 0;
+    const doorGapHalf = 0.85;
+
+    if (lm.face === 'z+' || lm.face === 'z-') {
+      const fzSign = lm.face === 'z+' ? 1 : -1;
+      const wallZ = lm.z + fzSign * (hz - t / 2);
+      
+      const leftLen = hx + doorU - doorGapHalf;
+      if (leftLen > 0.2) {
+        const leftCenterX = lm.x - hx + leftLen / 2;
+        colliders.push(ctx.collision.addBox(leftCenterX, wallZ, leftLen / 2, t / 2, y, yTop, 0, lm.name + '_front_L'));
+      }
+      
+      const rightLen = hx - (doorU + doorGapHalf);
+      if (rightLen > 0.2) {
+        const rightCenterX = lm.x + hx - rightLen / 2;
+        colliders.push(ctx.collision.addBox(rightCenterX, wallZ, rightLen / 2, t / 2, y, yTop, 0, lm.name + '_front_R'));
+      }
+    } else if (lm.face === 'x+' || lm.face === 'x-') {
+      const fxSign = lm.face === 'x+' ? 1 : -1;
+      const wallX = lm.x + fxSign * (hx - t / 2);
+      
+      const leftLen = hz + doorU - doorGapHalf;
+      if (leftLen > 0.2) {
+        const leftCenterZ = lm.z - hz + leftLen / 2;
+        colliders.push(ctx.collision.addBox(wallX, leftCenterZ, t / 2, leftLen / 2, y, yTop, 0, lm.name + '_front_L'));
+      }
+      
+      const rightLen = hz - (doorU + doorGapHalf);
+      if (rightLen > 0.2) {
+        const rightCenterZ = lm.z + hz - rightLen / 2;
+        colliders.push(ctx.collision.addBox(wallX, rightCenterZ, t / 2, rightLen / 2, y, yTop, 0, lm.name + '_front_R'));
+      }
     }
     
     bldg.userData.colliders = colliders;
@@ -647,7 +680,7 @@ export function buildBuildings(ctx: PortfolioContext) {
       center.applyMatrix4(door.matrixWorld);
 
       bldg.userData.doorCollider = ctx.collision.addBox(
-        center.x, center.z, cx, cz, y, y + 2.05, door.rotation.y, lm.name + '_door'
+        center.x, center.z, Math.max(cx, 0.1), Math.max(cz, 0.1), y, y + 2.05, door.rotation.y, lm.name + '_door'
       );
     }
 
@@ -656,59 +689,57 @@ export function buildBuildings(ctx: PortfolioContext) {
     const frontIsX = lm.face.startsWith('x');
     const fx = frontIsX ? (lm.face === 'x+' ? 1 : -1) : 0;
     const fz = frontIsX ? 0 : (lm.face === 'z+' ? 1 : -1);
-    const doorU = bldg.userData.doorU;
     const ix = lm.x + fx * (lm.w / 2) + (frontIsX ? 0 : doorU);
     const iz = lm.z + fz * (lm.d / 2) + (frontIsX ? doorU : 0);
 
     if (typeof (ctx.collision as any).addFloor === 'function') {
-      if (lm.id === 'techLab') {
+      (ctx.collision as any).addFloor(lm.x, lm.z, lm.w / 2, lm.d / 2, y);
+      if (lm.floors > 1) {
         (ctx.collision as any).addFloor(lm.x, lm.z, lm.w / 2, lm.d / 2, y + (lm.floors * floorH));
-      }
-      if (lm.id === 'techLab' || lm.id === 'securityLab') {
-        (ctx.collision as any).addFloor(lm.x, lm.z, lm.w / 2, lm.d / 2, y);
       }
     }
 
-    let isOpen = false;
-    ctx.interaction.register({
-      id: lm.id,
-      position: new THREE.Vector3(ix, y + 1.0, iz),
-      radius: 2.0,
-      facingDot: -1.0,
-      skipLineTest: true,
-      label: `[E] ENTER ${lm.name.toUpperCase()}`,
-      onInteract: () => {
-        const door = bldg.getObjectByName('door_hinge') as THREE.Mesh;
-        if (door) {
-          isOpen = !isOpen;
-          
-          let doorCollider = bldg.userData.doorCollider;
+    // In Birthday mode, Home is a backdrop ("A QUIET PLACE"), user explores the active district landmarks
+    const canEnter = !(BirthdayThemeConfig.enabled && lm.id === 'home');
 
-          animate({
-            targets: door.rotation,
-            y: isOpen ? ((lm.face.startsWith('x') ? 1 : -1) * Math.PI / 2) : 0,
-            duration: 800,
-            easing: 'easeInOutQuad',
-            begin: () => {
-              // No need to disable building collider since walls are hollow and have a gap for the door.
-              // The doorCollider itself will rotate out of the way.
-            },
-            update: () => {
-              door.updateMatrixWorld();
-              const center = new THREE.Vector3();
-              door.geometry.boundingBox!.getCenter(center);
-              center.applyMatrix4(door.matrixWorld);
-              doorCollider.cx = center.x;
-              doorCollider.cz = center.z;
-              doorCollider.rot = door.rotation.y;
-            }
-          });
+    if (canEnter) {
+      let isOpen = false;
+      ctx.interaction.register({
+        id: lm.id,
+        position: new THREE.Vector3(ix, y + 1.0, iz),
+        radius: 2.2,
+        facingDot: -1.0,
+        skipLineTest: true,
+        label: `[E] ENTER ${BirthdayThemeConfig.enabled 
+          ? (lm.id === 'techLab' ? 'NIGHT WORKSHOP' : lm.id === 'securityLab' ? 'NIGHT WATCH' : lm.id === 'station' ? 'LAST TRAIN' : 'QUIET HOURS')
+          : lm.name.toUpperCase()}`,
+        onInteract: () => {
+          const door = bldg.getObjectByName('door_hinge') as THREE.Mesh;
+          if (door) {
+            isOpen = !isOpen;
+            
+            let doorCollider = bldg.userData.doorCollider;
+
+            animate(door.rotation, {
+              y: isOpen ? ((lm.face.startsWith('x') ? 1 : -1) * Math.PI / 2) : 0,
+              duration: 800,
+              easing: 'easeInOutQuad',
+              begin: () => {
+                if (doorCollider) doorCollider.disabled = true;
+              },
+              complete: () => {
+                if (doorCollider && !isOpen) {
+                  doorCollider.disabled = false;
+                }
+              }
+            });
+          }
         }
-      }
-    });
+      });
 
-    // Build the interior (passing the determined doorU)
-    buildInterior(ctx, lm, bldg.userData.doorU);
+      // Build the interior (passing the determined doorU)
+      buildInterior(ctx, lm, bldg.userData.doorU);
+    }
   }
 
   // Security Fence removed to allow access to Security Lab

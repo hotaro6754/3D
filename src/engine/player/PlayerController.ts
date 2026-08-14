@@ -64,6 +64,10 @@ export class PlayerController {
 
   mode: CameraMode = CameraMode.PLAYER;
 
+  get position(): THREE.Vector3 {
+    return this.state.position;
+  }
+
   get frozen() {
     return this.mode === CameraMode.CINEMATIC;
   }
@@ -137,8 +141,10 @@ export class PlayerController {
 
     // ---- Look -------------------------------------------------------
     if (!this.frozen) {
-      s.yaw -= input.mouseDX;
-      s.pitch = clamp(s.pitch - input.mouseDY, -MAX_PITCH, MAX_PITCH);
+      const totalDX = input.mouseDX + input.touchDX;
+      const totalDY = input.mouseDY + input.touchDY;
+      s.yaw -= totalDX;
+      s.pitch = clamp(s.pitch - totalDY, -MAX_PITCH, MAX_PITCH);
     }
 
     // ---- Wish direction ---------------------------------------------
@@ -151,13 +157,17 @@ export class PlayerController {
       if (input.anyDown('KeyD', 'ArrowRight')) ix += 1;
       if (input.anyDown('KeyA', 'ArrowLeft')) ix -= 1;
       
+      // Virtual joystick
+      ix += input.touchMoveX;
+      iz += input.touchMoveZ;
+      
       if (input.wasPressed('KeyE')) {
         this.ctx.interaction.activate();
       }
     }
 
     const crouching = canMove && input.anyDown('ShiftLeft', 'ShiftRight') === false && input.anyDown('KeyC');
-    const running = canMove && input.anyDown('ShiftLeft', 'ShiftRight') && !crouching;
+    const running = canMove && (input.anyDown('ShiftLeft', 'ShiftRight') || input.isDown('MobileSprint')) && !crouching;
 
     const maxSpeed = crouching ? CROUCH_SPEED : running ? RUN_SPEED : WALK_SPEED;
 
@@ -166,7 +176,11 @@ export class PlayerController {
 
     this.wishDir.set(0, 0, 0);
     if (ix !== 0 || iz !== 0) {
-      this.wishDir.addScaledVector(this.forward, iz).addScaledVector(this.right, ix).normalize();
+      this.wishDir.addScaledVector(this.forward, iz).addScaledVector(this.right, ix);
+      const len = this.wishDir.length();
+      if (len > 1) {
+        this.wishDir.normalize();
+      }
     }
 
     // ---- Horizontal acceleration ------------------------------------
@@ -190,7 +204,7 @@ export class PlayerController {
     s.velocity.z = vh.y;
 
     // ---- Jump and gravity -------------------------------------------
-    if (canMove && s.grounded && input.wasPressed('Space')) {
+    if (canMove && s.grounded && (input.wasPressed('Space') || input.wasPressed('MobileJump'))) {
       s.velocity.y = JUMP_VELOCITY;
       s.grounded = false;
     }
@@ -232,7 +246,7 @@ export class PlayerController {
       s.position.x = resolved.x;
       s.position.z = resolved.y;
 
-      const ground = this.ctx.collision.groundHeight(s.position.x, s.position.z);
+      const ground = this.ctx.collision.groundHeight(s.position.x, s.position.z, s.position.y);
       if (nextY <= ground) {
         nextY = ground;
         if (!s.grounded) this.onLand(Math.abs(s.velocity.y));
