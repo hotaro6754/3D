@@ -1,6 +1,7 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import ClassicPortfolio from './features/classic/ClassicPortfolio';
 import World from './components/world/World';
 import Home from './pages/Home';
@@ -93,6 +94,7 @@ export default function App() {
         </div>
       </div>
     </div>
+    <Analytics />
     </MusicProvider>
   );
 }
